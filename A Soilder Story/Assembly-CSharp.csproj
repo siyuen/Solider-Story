@@ -141,10 +141,10 @@
  <HintPath>E:/SiYuen/Unity/Editor/Data/UnityExtensions/Unity/UnityVR/RuntimeEditor/UnityEngine.VR.dll</HintPath>
  </Reference>
  <Reference Include="LitJson">
- <HintPath>E:/SiYuen/小兵的故事/A Soilder Story/Assets/Plugins/LitJson.dll</HintPath>
+ <HintPath>E:/SiYuen/Github/Solider-Story/A Soilder Story/Assets/Plugins/LitJson.dll</HintPath>
  </Reference>
  <Reference Include="DOTween">
- <HintPath>E:/SiYuen/小兵的故事/A Soilder Story/Assets/Plugins/DOTween/DOTween.dll</HintPath>
+ <HintPath>E:/SiYuen/Github/Solider-Story/A Soilder Story/Assets/Plugins/DOTween/DOTween.dll</HintPath>
  </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

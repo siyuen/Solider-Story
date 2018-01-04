@@ -40,7 +40,7 @@ public class EnemyController : Character
     public void SearchHero()
     {
         mainInstance.DoMoveRange(this.transform.position, 2, 1);
-        mainInstance.AddAttackNodeInList(1);
+        mainInstance.AddAttackNodeInList(1, mID);
         attackHeroList = mainInstance.GetAttackHeroList();
         if (attackHeroList.Count > 0)
         {
@@ -51,6 +51,31 @@ public class EnemyController : Character
         {
             Standby();
         }
+    }
+
+    /// <summary>
+    /// 选择enemy，显示移动范围，隐藏UI
+    /// </summary>
+    public void Selected()
+    {
+        if (!bSelected)
+        {
+            bSelected = true;
+            ShowMoveRange();
+            Moved(false);
+            mainInstance.HideAllUI();
+        }
+    }
+
+    /// <summary>
+    /// 取消选择，消除移动范围,显示UI
+    /// </summary>
+    public void CancelSelected()
+    {
+        bSelected = false;
+        HideMoveRange();
+        Moved(true);
+        mainInstance.ShowAllUI();
     }
 
     public override void MoveDone()

@@ -14,6 +14,8 @@ public class HeroController : Character
         dead,
     }
     private HeroState heroState;
+    //移动的起点
+    private int fromIdx;
     // Use this for initialization
     void Start()
     {
@@ -77,7 +79,7 @@ public class HeroController : Character
     }
 
     /// <summary>
-    /// 鼠标点击人物
+    /// 选择人物
     /// </summary>
     public void Selected()
     {
@@ -86,10 +88,50 @@ public class HeroController : Character
         if (!bSelected)
         {
             bSelected = true;
-            mainInstance.curHero = this;
+            fromIdx = mID;
+            SetAnimator("bSelected", bSelected);
+            SetAnimator("bNormal", false);
             ShowMoveRange();
-            UIManager.Instance().CloseUIForms("CharacterData");
+            Moved(false);
             mainInstance.HideAllUI();
+        }
+    }
+
+    /// <summary>
+    /// 取消选择
+    /// </summary>
+    public void CancelSelected()
+    {
+        heroState = HeroState.normal;
+        bSelected = false;
+        SetAnimator("bSelected", bSelected);
+        SetAnimator("bNormal", true);
+        HideMoveRange();
+        mainInstance.ShowAllUI();
+        Moved(true);
+    }
+
+    /// <summary>
+    /// 取消移动，返回选择人物状态
+    /// </summary>
+    public void CancelMoveDone()
+    {
+        heroState = HeroState.normal;
+        if (fromIdx != mID)
+        {
+            this.transform.position = mainInstance.Idx2Pos2(fromIdx);
+            mID = fromIdx;
+            SetAnimator("bSelected", true);
+            SetAnimator(dirStr, false);
+            ShowMoveRange();
+            HideMenuUI();
+        }
+        else
+        {
+            SetAnimator("bSelected", true);
+            SetAnimator(dirStr, false);
+            ShowMoveRange();
+            HideMenuUI();
         }
     }
 
@@ -125,6 +167,7 @@ public class HeroController : Character
     private void HideMenuUI()
     {
         UIManager.Instance().CloseUIForms("HeroMenu");
+        mainInstance.RegisterKeyBoardEvent();
     }
 
 }

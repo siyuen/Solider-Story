@@ -36,6 +36,7 @@ public class InputManager : QMonoSingleton<InputManager> {
         eventTypeDic.Add(EventType.KEY_LEFTARROW, keyDownEvent);
         eventTypeDic.Add(EventType.KEY_RIGHTARROW, keyDownEvent);
         eventTypeDic.Add(EventType.KEY_Z, keyDownEvent);
+        eventTypeDic.Add(EventType.KEY_X, keyDownEvent);
     }
 
     void Start()

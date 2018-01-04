@@ -17,7 +17,8 @@ public class MainManager : QMonoSingleton<MainManager>
 
     public static Vector2 PIVOT = new Vector2(8, -8);
 
-    public HeroController curHero;  //当前选择的人物
+    public HeroController curHero;  //当前选择的hero
+    public EnemyController curEnemy;  //当前选择的enemy
     public HeroController curMouseHero;  //当前光标处的hero
     public EnemyController curMouseEnemy;  //光标处的enemy
     public bool heroRound = true;
@@ -156,7 +157,7 @@ public class MainManager : QMonoSingleton<MainManager>
     }
     #endregion
 
-    #region 人物点击相关
+    #region 鼠标操作
     /// <summary>
     /// 点击获取hit
     /// </summary>
@@ -245,6 +246,113 @@ public class MainManager : QMonoSingleton<MainManager>
             return true;
         else
             return false;
+    }
+
+    private void MouseMove()
+    {
+        Camera mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+        Vector2 position = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+        if (!IsInMap(position))
+            return;
+        if (!IsChangeIdx(position))
+            return;
+        mouseCursor.transform.position = Idx2Pos(cursorIdx);
+        RaycastHit2D hit = Physics2D.Raycast(position, Vector2.zero, 0, LayerMask.GetMask("Character"));
+        if (hit)
+            MouseEnterCharacter(hit);
+        else
+        {
+            //鼠标移出hero
+            if (curMouseHero != null)
+            {
+                curMouseHero.Moved(false);
+                curMouseHero = null;
+            }
+            if (mouseCursor.activeSelf)
+                cursorAnimator.SetBool("Hero", false);
+            //鼠标移出enemy
+            if (curMouseEnemy != null)
+            {
+                curMouseEnemy.Moved(false);
+                curMouseEnemy = null;
+            }
+        }
+        //RaycastHit2D hit2 = Physics2D.Raycast(position, Vector2.zero, 0, LayerMask.GetMask("Map"));
+    }
+
+    /// <summary>
+    /// 鼠标进入的各种情况
+    /// </summary>
+    private void MouseEnterCharacter(RaycastHit2D hit)
+    {
+        if (hit.collider.CompareTag("Hero"))
+        {
+            //鼠标进入hero
+            curMouseHero = hit.collider.GetComponent<HeroController>();
+            curMouseHero.Moved(true);
+            if (mouseCursor.activeSelf)
+                cursorAnimator.SetBool("Hero", true);
+        }
+        else if (hit.collider.CompareTag("Enemy"))
+        {
+            //鼠标进入enemy
+            curMouseEnemy = hit.collider.GetComponent<EnemyController>();
+            if (!curMouseEnemy)
+                return;
+            curMouseEnemy.Moved(true);
+        }
+    }
+
+    /// <summary>
+    /// 鼠标进入mapnode,更新UI的pos
+    /// </summary>
+    private void MouseEnterMapNode(RaycastHit2D hit)
+    {
+        UIManager uiInstance = UIManager.Instance();
+        //地图MapNode
+        int id = hit.collider.GetComponent<MapNode>().GetID();
+        if (Idx2ListPos(id).x >= mapXNode / 2)
+        {
+            //一四象限
+            uiInstance.ShowUIForms("LandData_1");
+            uiInstance.GetUI("LandData_1").GetComponent<LandDataView_1>().UpdataData(GetMapNode(id));
+            uiInstance.CloseUIForms("LandData_2");
+            //第四象限
+            if (Idx2ListPos(id).y >= mapYNode / 2)
+            {
+                uiInstance.ShowUIForms("GameGoal_1");
+                uiInstance.CloseUIForms("GameGoal_2");
+            }
+            else
+            {
+                uiInstance.ShowUIForms("GameGoal_2");
+                uiInstance.CloseUIForms("GameGoal_1");
+            }
+        }
+        else
+        {
+            //二三象限;需要判断GameGoalUI是否在第四象限
+            if (uiInstance.GetUIActive("GameGoal_2"))
+            {
+                uiInstance.ShowUIForms("GameGoal_1");
+                uiInstance.CloseUIForms("GameGoal_2");
+            }
+            uiInstance.ShowUIForms("LandData_2");
+            uiInstance.GetUI("LandData_2").GetComponent<LandDataView_2>().UpdataData(GetMapNode(id));
+            uiInstance.CloseUIForms("LandData_1");
+        }
+    }
+
+    public void AddMouseMoveEvent()
+    {
+        mouseCursor.SetActive(true);
+        InputManager.Instance().RegisterMouseEnterEvent(MouseMove, EventType.PLAYER_MOVE);
+    }
+
+    public void DelMouseMoveEvent()
+    {
+        mouseCursor.SetActive(false);
+        InputManager.Instance().RegisterMouseEnterEvent(MouseMove, EventType.PLAYER_MOVE, false);
     }
     #endregion
 
@@ -338,17 +446,14 @@ public class MainManager : QMonoSingleton<MainManager>
     private void TurnConfirm()
     {
         //判断当前是否有选择hero
-        if (curHero == null)
+        if (!curHero)
         {
             if (GetMapNode(cursorIdx).locatedHero)
             {
                 HeroController hero = GetMapNode(cursorIdx).locatedHero;
-                hero.Selected();
-                hero.SetAnimator("bSelected", hero.bSelected);
-                hero.SetAnimator("bNormal", false);
                 curHero = hero;
+                hero.Selected();
             }
-
         }
         else
         {
@@ -367,11 +472,39 @@ public class MainManager : QMonoSingleton<MainManager>
                 node.locatedHero = curHero;
                 curHero.MoveTo(node.GetID());
             }
-        }       
+        }      
+        //判断当前是否有选择enemy
+        if (!curEnemy)
+        {
+            if (GetMapNode(cursorIdx).locatedEnemy)
+            {
+                EnemyController enemy = GetMapNode(cursorIdx).locatedEnemy;
+                curEnemy = enemy;
+                enemy.Selected();
+            }
+        }
+        else
+        {
+            curEnemy.CancelSelected();
+            curEnemy = null;
+        }
     }
 
+    /// <summary>
+    /// 取消事件
+    /// </summary>
     private void TurnCancel()
     {
+        if (curHero)
+        {
+            curHero.CancelSelected();
+            curHero = null;
+        }
+        else if (curEnemy)
+        {
+            curEnemy.CancelSelected();
+            curEnemy = null;
+        }
     }
 
     /// <summary>
@@ -449,7 +582,10 @@ public class MainManager : QMonoSingleton<MainManager>
     /// </summary>
     public void ShowAttackRange()
     {
-        AddAttackNodeInList(curHero.attackRange);
+        if(curEnemy)
+            AddAttackNodeInList(curEnemy.attackRange, curEnemy.mID);
+        if(curHero)
+            AddAttackNodeInList(curHero.attackRange, curHero.mID);
         if (attackNodeList.Count > 0)
         {
             for (int i = 0; i < attackNodeList.Count; i++)
@@ -459,15 +595,6 @@ public class MainManager : QMonoSingleton<MainManager>
                 attackObjList.Add(node);
                 node.transform.SetParent(moveRangeObj.transform);
             }
-            //List<GameObject> objList = ResourcesMgr.Instance().GetPool(ATTACKNODE_PATH, attackNodeList.Count);
-            //for (int i = 0; i < objList.Count; i++)
-            //{
-            //    Vector3 nodePos = mapNodeList[attackNodeList[i]].transform.position;
-            //    GameObject node = objList[i];
-            //    node.transform.position = nodePos;
-            //    nodeObjList.Add(node);
-            //    node.transform.SetParent(moveRangeObj.transform);
-            //}
         }
     }
 
@@ -607,11 +734,10 @@ public class MainManager : QMonoSingleton<MainManager>
     /// <summary>
     /// 添加idx显示attackRange
     /// </summary>
-    public void AddAttackNodeInList(int attackRange)
+    public void AddAttackNodeInList(int attackRange, int idx)
     {
         if (endNodeList.Count == 0)
         {
-            int idx = curHero.mID;
             int nowRow = idx / mapXNode;
             if (IsInMap(idx + 1) && !mapNodeList[idx + 1].bVisited && (idx + 1) / mapXNode == nowRow)
             {
@@ -638,161 +764,51 @@ public class MainManager : QMonoSingleton<MainManager>
         {
             for (int i = 0; i < endNodeList.Count; i++)
             {
-                int idx = endNodeList[i];
-                int nowRow = idx / mapXNode;
-                if (IsInMap(idx + 1) && !mapNodeList[idx + 1].bVisited && (idx + 1) / mapXNode == nowRow)
+                int id = endNodeList[i];
+                int nowRow = id / mapXNode;
+                if (IsInMap(id + 1) && !mapNodeList[id + 1].bVisited && (id + 1) / mapXNode == nowRow)
                 {
-                    if (!attackNodeList.Contains(idx + 1))
+                    if (!attackNodeList.Contains(id + 1))
                     {
-                        attackNodeList.Add(idx + 1);
-                        mapNodeList[idx + 1].parentMapNode = mapNodeList[idx];
-                        if (mapNodeList[idx + 1].locatedHero && !attackHeroList.Contains(idx + 1))
-                            attackHeroList.Add(idx + 1);
+                        attackNodeList.Add(id + 1);
+                        mapNodeList[id + 1].parentMapNode = mapNodeList[id];
+                        if (mapNodeList[id + 1].locatedHero && !attackHeroList.Contains(id + 1))
+                            attackHeroList.Add(id + 1);
                     }
                 }
-                if (IsInMap(idx + mapXNode) && !mapNodeList[idx + mapXNode].bVisited)
+                if (IsInMap(id + mapXNode) && !mapNodeList[id + mapXNode].bVisited)
                 {
-                    if (!attackNodeList.Contains(idx + mapXNode))
+                    if (!attackNodeList.Contains(id + mapXNode))
                     {
-                        attackNodeList.Add(idx + mapXNode);
-                        mapNodeList[idx + mapXNode].parentMapNode = mapNodeList[idx];
-                        if (mapNodeList[idx + mapXNode].locatedHero && !attackHeroList.Contains(idx + mapXNode))
-                            attackHeroList.Add(idx + mapXNode);
+                        attackNodeList.Add(id + mapXNode);
+                        mapNodeList[id + mapXNode].parentMapNode = mapNodeList[id];
+                        if (mapNodeList[id + mapXNode].locatedHero && !attackHeroList.Contains(id + mapXNode))
+                            attackHeroList.Add(id + mapXNode);
                     }
                 }
-                if (IsInMap(idx - 1) && !mapNodeList[idx - 1].bVisited && (idx - 1) / mapXNode == nowRow)
+                if (IsInMap(id - 1) && !mapNodeList[id - 1].bVisited && (id - 1) / mapXNode == nowRow)
                 {
-                    if (!attackNodeList.Contains(idx - 1))
+                    if (!attackNodeList.Contains(id - 1))
                     {
-                        attackNodeList.Add(idx - 1);
-                        mapNodeList[idx - 1].parentMapNode = mapNodeList[idx];
-                        if (mapNodeList[idx - 1].locatedHero && !attackHeroList.Contains(idx - 1))
-                            attackHeroList.Add(idx - 1);
+                        attackNodeList.Add(id - 1);
+                        mapNodeList[id - 1].parentMapNode = mapNodeList[id];
+                        if (mapNodeList[id - 1].locatedHero && !attackHeroList.Contains(id - 1))
+                            attackHeroList.Add(id - 1);
                     }
                 }
-                if (IsInMap(idx - mapXNode) && !mapNodeList[idx - mapXNode].bVisited)
+                if (IsInMap(id - mapXNode) && !mapNodeList[id - mapXNode].bVisited)
                 {
-                    if (!attackNodeList.Contains(idx - mapXNode))
+                    if (!attackNodeList.Contains(id - mapXNode))
                     {
-                        attackNodeList.Add(idx - mapXNode);
-                        mapNodeList[idx - mapXNode].parentMapNode = mapNodeList[idx];
-                        if (mapNodeList[idx - mapXNode].locatedHero && !attackHeroList.Contains(idx - mapXNode))
-                            attackHeroList.Add(idx - mapXNode);
+                        attackNodeList.Add(id - mapXNode);
+                        mapNodeList[id - mapXNode].parentMapNode = mapNodeList[id];
+                        if (mapNodeList[id - mapXNode].locatedHero && !attackHeroList.Contains(id - mapXNode))
+                            attackHeroList.Add(id - mapXNode);
                     }
                 }
             }
         }
     }
-    #endregion
-
-    #region 鼠标光标相关 
-    private void MouseMove()
-    {
-        Camera mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
-        Vector2 position = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-        if (!IsInMap(position))
-            return;
-        if (!IsChangeIdx(position))
-            return;
-        mouseCursor.transform.position = Idx2Pos(cursorIdx);
-        RaycastHit2D hit = Physics2D.Raycast(position, Vector2.zero, 0, LayerMask.GetMask("Character"));
-        if (hit)
-            MouseEnterCharacter(hit);
-        else
-        {
-            //鼠标移出hero
-            if (curMouseHero != null)
-            {
-                curMouseHero.Moved(false);
-                curMouseHero = null;
-            }
-            if (mouseCursor.activeSelf)
-                cursorAnimator.SetBool("Hero", false);
-            //鼠标移出enemy
-            if (curMouseEnemy != null)
-            {
-                curMouseEnemy.Moved(false);
-                curMouseEnemy = null;
-            }
-        }
-        //RaycastHit2D hit2 = Physics2D.Raycast(position, Vector2.zero, 0, LayerMask.GetMask("Map"));
-    }
-
-    /// <summary>
-    /// 鼠标进入的各种情况
-    /// </summary>
-    private void MouseEnterCharacter(RaycastHit2D hit)
-    {
-        if (hit.collider.CompareTag("Hero"))
-        {
-            //鼠标进入hero
-            curMouseHero = hit.collider.GetComponent<HeroController>();
-            curMouseHero.Moved(true);
-            if (mouseCursor.activeSelf)
-                cursorAnimator.SetBool("Hero", true);
-        }
-        else if (hit.collider.CompareTag("Enemy"))
-        {
-            //鼠标进入enemy
-            curMouseEnemy = hit.collider.GetComponent<EnemyController>();
-            if (!curMouseEnemy)
-                return;
-            curMouseEnemy.Moved(true);
-        }
-    }
-
-    /// <summary>
-    /// 鼠标进入mapnode,更新UI的pos
-    /// </summary>
-    private void MouseEnterMapNode(RaycastHit2D hit)
-    {
-        UIManager uiInstance = UIManager.Instance();
-        //地图MapNode
-        int id = hit.collider.GetComponent<MapNode>().GetID();
-        if (Idx2ListPos(id).x >= mapXNode / 2)
-        {
-            //一四象限
-            uiInstance.ShowUIForms("LandData_1");
-            uiInstance.GetUI("LandData_1").GetComponent<LandDataView_1>().UpdataData(GetMapNode(id));
-            uiInstance.CloseUIForms("LandData_2");
-            //第四象限
-            if (Idx2ListPos(id).y >= mapYNode / 2)
-            {
-                uiInstance.ShowUIForms("GameGoal_1");
-                uiInstance.CloseUIForms("GameGoal_2");
-            }
-            else
-            {
-                uiInstance.ShowUIForms("GameGoal_2");
-                uiInstance.CloseUIForms("GameGoal_1");
-            }
-        }
-        else
-        {
-            //二三象限;需要判断GameGoalUI是否在第四象限
-            if (uiInstance.GetUIActive("GameGoal_2"))
-            {
-                uiInstance.ShowUIForms("GameGoal_1");
-                uiInstance.CloseUIForms("GameGoal_2");
-            }
-            uiInstance.ShowUIForms("LandData_2");
-            uiInstance.GetUI("LandData_2").GetComponent<LandDataView_2>().UpdataData(GetMapNode(id));
-            uiInstance.CloseUIForms("LandData_1");
-        }
-    }
-
-    public void AddMouseMoveEvent()
-    {
-        mouseCursor.SetActive(true);
-        InputManager.Instance().RegisterMouseEnterEvent(MouseMove, EventType.PLAYER_MOVE);
-    }
-
-    public void DelMouseMoveEvent()
-    {
-        mouseCursor.SetActive(false);
-        InputManager.Instance().RegisterMouseEnterEvent(MouseMove, EventType.PLAYER_MOVE, false);
-    }
-
     #endregion
 
     #region 公有方法:判断是否在地图内;转换idx跟pos;UI显示
@@ -908,6 +924,17 @@ public class MainManager : QMonoSingleton<MainManager>
         UIManager.Instance().CloseUIForms("LandData_2");
         UIManager.Instance().CloseUIForms("GameGoal_1");
         UIManager.Instance().CloseUIForms("GameGoal_2");
+    }
+
+    /// <summary>
+    /// 设置光标位置
+    /// </summary>
+    public void SetCursorPos(int idx)
+    {
+        if (cursorIdx == idx)
+            return;
+        cursorIdx = idx;
+        mouseCursor.transform.position = Idx2Pos(idx);
     }
     #endregion
 

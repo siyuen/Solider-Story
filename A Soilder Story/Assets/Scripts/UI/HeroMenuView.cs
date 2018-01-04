@@ -5,6 +5,8 @@ using UIFramework;
 using UnityEngine.UI;
 
 public class HeroMenuView : UIBase {
+
+    public const string BUTTON_PATH = "Prefabs/UI/Normal/Button";
     public Image menuBg;
     public Image menuBottom;
     public GameObject uiContent;
@@ -16,6 +18,7 @@ public class HeroMenuView : UIBase {
     private float bgStartHeight;
     private Vector2 bgSize;
     private Vector2 bottomSize;
+    private Vector2 defaultSize;
     //存选项btn
     private List<GameObject> optionButton = new List<GameObject>();
     private int optionIdx;
@@ -23,15 +26,16 @@ public class HeroMenuView : UIBase {
     private delegate void OptionFunc();
     //按照顺序存
     private Dictionary<int, OptionFunc> funcDic = new Dictionary<int, OptionFunc>();
-    private int[] test = new int[10];
-
+    private int[] funcArray = new int[10];
+    //方法索引
+    private int funcIdx;
 
     void Awake()
     {
         CurrentUIType.UIForms_Type = UIFormType.Normal;
         CurrentUIType.UIForms_ShowMode = UIFormShowMode.Normal;
         heroOption = HeroProperty.HeroOption.Instance();
-        InitMenu();
+        defaultSize = menuBg.rectTransform.sizeDelta;
     }
 
     /// <summary>
@@ -44,27 +48,33 @@ public class HeroMenuView : UIBase {
         GetOptions();
 
         //计算背景显示
-        bgSize = menuBg.rectTransform.sizeDelta;
-        bottomSize = menuBg.rectTransform.sizeDelta;
+        bgSize = defaultSize;
+        bottomSize = defaultSize;
         bgStartHeight = bgSize.y;
         bgSize.y = bgStartHeight * countOptions;
         bottomSize.y = bgSize.y - bgStartHeight;
         menuBg.rectTransform.sizeDelta = bgSize;
-        menuBottom.rectTransform.position += new Vector3(0, -bottomSize.y, 0);
+        menuBottom.rectTransform.position -= new Vector3(0, bottomSize.y / 100, 0);
     }
 
     public override void Display()
     {
+        InitMenu();
         base.Display();
         optionIdx = 0;
+        funcIdx = 0;
         RegisterKeyBoardEvent();
     }
 
     public override void Hiding()
     {
         base.Hiding();
+        GameObjectPool.Instance().PushPool(optionButton, BUTTON_PATH);
+        optionButton.Clear();
         UnRegisterKeyBoardEvent();
         funcDic.Clear();
+        funcArray = new int[10];
+        menuBottom.rectTransform.position += new Vector3(0, bottomSize.y / 100, 0);
     }
 
     /// <summary>
@@ -73,10 +83,11 @@ public class HeroMenuView : UIBase {
     private void AddItem(HeroProperty.HeroOptions option)
     {
         countOptions += 1;
-        GameObject btn = Instantiate(optionPrefab) as GameObject;
-        btn.SetActive(true);
+        //GameObject btn = Instantiate(optionPrefab) as GameObject;
+        GameObject btn = GameObjectPool.Instance().GetPool(BUTTON_PATH, Vector3.zero);
         btn.transform.SetParent(uiContent.transform);
         btn.transform.SetSiblingIndex(heroOption.optionValue[option]);
+        btn.transform.localScale = Vector3.one;
         //设置
         Text txt = btn.GetComponentInChildren<Text>();
         string str;
@@ -93,43 +104,59 @@ public class HeroMenuView : UIBase {
     private void GetOptions()
     {
         heroOption.Init();
+        
+        //排序还待优化
+        //待机为默认
         HeroProperty.HeroOptions option = HeroProperty.HeroOptions.Standby;
-
-        //这里目前要按照顺序添加才能实现,暂时没想到好的方法
-
-        int a = 0;
+        //AddItem(option);
+        //RegisterButtonObjectEvent(name, p => Standby());
+        funcDic.Add(heroOption.optionValue[option], Standby);
+        SortFunc(option);
         //检测敌人
         int id = MainManager.Instance().curHero.CheckIsEnemyAround();
         if (id != -1)
         {
             option = HeroProperty.HeroOptions.Attack;
-            AddItem(option);
+            //AddItem(option);
             //RegisterButtonObjectEvent(name, p => Attack());
             funcDic.Add(heroOption.optionValue[option], Attack);
             MainManager.Instance().ShowAttackRange();
-            test[a] = heroOption.optionValue[option];
-            a++;
+            SortFunc(option);
         }
         //检测物品
         option = HeroProperty.HeroOptions.Item;
-        AddItem(option);
+        //AddItem(option);
         funcDic.Add(heroOption.optionValue[option], Item);
-        test[a] = heroOption.optionValue[option];
-        a++;
-        Debug.Log(0);
-        //待机为默认
-        option = HeroProperty.HeroOptions.Standby;
-        AddItem(option);
-        //RegisterButtonObjectEvent(name, p => Standby());
-        funcDic.Add(heroOption.optionValue[option], Standby);
-        test[a] = heroOption.optionValue[option];
-        a++;
-        Debug.Log(1);
+        SortFunc(option);
+        //添加到content
+        for (int i = 0; i < funcIdx; i++)
+        {
+            AddItem(heroOption.GetOption(funcArray[i]));
+        }
     }
 
-
-    private void Sort()
+    /// <summary>
+    /// 将方法排序
+    /// </summary>
+    private void SortFunc(HeroProperty.HeroOptions option)
     {
+        funcArray[funcIdx] = heroOption.optionValue[option];
+        funcIdx++;
+        if (funcIdx > 1)
+        {
+            for (int i = 0; i < funcIdx - 1; i++)
+            {
+                for (int j = 1; j < funcIdx; j++)
+                {
+                    if (funcArray[i] > funcArray[j])
+                    {
+                        int z = funcArray[i];
+                        funcArray[i] = funcArray[j];
+                        funcArray[j] = z;
+                    }
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -140,6 +167,7 @@ public class HeroMenuView : UIBase {
         InputManager.Instance().RegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_UPARROW);
         InputManager.Instance().RegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_DOWNARROW);
         InputManager.Instance().RegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
+        InputManager.Instance().RegisterKeyDownEvent(OnCancelDown, EventType.KEY_X);
     }
 
     private void UnRegisterKeyBoardEvent()
@@ -147,6 +175,7 @@ public class HeroMenuView : UIBase {
         InputManager.Instance().UnRegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_UPARROW);
         InputManager.Instance().UnRegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_DOWNARROW);
         InputManager.Instance().UnRegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
+        InputManager.Instance().UnRegisterKeyDownEvent(OnCancelDown, EventType.KEY_X);
     }
 
     private void OnUpArrowDown()
@@ -179,7 +208,12 @@ public class HeroMenuView : UIBase {
 
     private void OnConfirmDown()
     {
-        funcDic[test[optionIdx]]();
+        funcDic[funcArray[optionIdx]]();
+    }
+
+    private void OnCancelDown()
+    {
+        MainManager.Instance().curHero.CancelMoveDone();
     }
 
     /// <summary>

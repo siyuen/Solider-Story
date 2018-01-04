@@ -6,6 +6,8 @@ using QFramework;
 public class HeroProperty{
     public enum HeroOptions
     {
+        //
+        Null,
         //待机
         Standby,
         //物品
@@ -34,6 +36,23 @@ public class HeroProperty{
         {
             //optionList.Add(HeroOptions.Standby);
             //optionList.Add(HeroOptions.Item);
+        }
+
+        /// <summary>
+        /// 通过值获取key
+        /// </summary>
+        public HeroOptions GetOption(int value)
+        {
+            HeroOptions option = HeroOptions.Null;
+            if (optionValue.ContainsValue(value))
+            {
+                foreach (var k in optionValue)
+                {
+                    if (k.Value == value)
+                        option = k.Key;
+                }
+            }
+            return option;
         }
     }
 }
