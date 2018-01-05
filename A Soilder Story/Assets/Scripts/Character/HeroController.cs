@@ -60,14 +60,9 @@ public class HeroController : Character
         mainInstance.curHero = null;
         HideMenuUI();
         if (HeroManager.Instance().SetStandby())
-        {
-            MainManager.Instance().HideAllUI();
-            StartCoroutine(DelayToInvoke.DelayToInvokeDo(() => { MainManager.Instance().SetEnemyRound(); }, 1f));
-        }
+            StartCoroutine(DelayToInvoke.DelayToInvokeDo(() => { mainInstance.SetEnemyRound(); }, 1f));
         else
-        {
-            MainManager.Instance().ShowAllUI();
-        }
+            mainInstance.ShowAllUI();
     }
 
     /// <summary>
@@ -106,6 +101,9 @@ public class HeroController : Character
         bSelected = false;
         SetAnimator("bSelected", bSelected);
         SetAnimator("bNormal", true);
+        mID = fromIdx;
+        mainInstance.SetCursorPos(mID);
+
         HideMoveRange();
         mainInstance.ShowAllUI();
         Moved(true);

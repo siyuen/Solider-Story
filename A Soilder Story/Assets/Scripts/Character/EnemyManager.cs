@@ -5,7 +5,6 @@ using QFramework;
 
 public class EnemyManager : QSingleton<EnemyManager> {
 
-    public const string ENEMY_PATH = "Prefabs/Game/enemy";
     private List<EnemyController> enemyList = new List<EnemyController>();
     private GameObject enemyContent;
     //记录当前enemy
@@ -22,7 +21,7 @@ public class EnemyManager : QSingleton<EnemyManager> {
         enemyContent = new GameObject();
         enemyContent.name = "Enemy";
         enemyIdx = 0;
-        GameObject enemy = GameObjectPool.Instance().GetPool(ENEMY_PATH, MainManager.Instance().Idx2Pos2(49));
+        GameObject enemy = GameObjectPool.Instance().GetPool(MainProperty.ENEMY_PATH, MainManager.Instance().Idx2Pos2(49));
         enemy.transform.SetParent(enemyContent.transform);
         enemy.GetComponent<EnemyController>().Init();
         enemyList.Add(enemy.GetComponent<EnemyController>());

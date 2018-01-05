@@ -8,9 +8,6 @@ using QFramework;
 
 public class CharacterDataView : UIBase
 {
-    public const string HERO_BG = "Sprites/UI/HeroDataBg";
-    public const string ENEMY_BG = "Sprites/UI/EnemyDataBg";
-
     public Image bgImage;
     public Image headImage;
     public Text nameText;
@@ -54,13 +51,13 @@ public class CharacterDataView : UIBase
         {
             y = (int)MainManager.Instance().Idx2ListPos(MainManager.Instance().curMouseHero.mID).y;
             yNode = MainManager.Instance().GetYNode();
-            bgImage.sprite = ResourcesMgr.Instance().LoadResource<Sprite>(HERO_BG, true);
+            bgImage.sprite = ResourcesMgr.Instance().LoadResource<Sprite>(MainProperty.HERO_BG, true);
         }
         else if (MainManager.Instance().curMouseEnemy)
         {
             y = (int)MainManager.Instance().Idx2ListPos(MainManager.Instance().curMouseEnemy.mID).y;
             yNode = MainManager.Instance().GetYNode();
-            bgImage.sprite = ResourcesMgr.Instance().LoadResource<Sprite>(ENEMY_BG, true);
+            bgImage.sprite = ResourcesMgr.Instance().LoadResource<Sprite>(MainProperty.ENEMY_BG, true);
         }
         
         if (y < yNode / 2)

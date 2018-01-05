@@ -6,14 +6,14 @@ using UnityEngine.UI;
 
 public class HeroMenuView : UIBase {
 
-    public const string BUTTON_PATH = "Prefabs/UI/Normal/Button";
     public Image menuBg;
     public Image menuBottom;
     public GameObject uiContent;
     public Image optionCursor;
-    public GameObject optionPrefab;
     private HeroProperty.HeroOption heroOption;
     private int countOptions;
+    //记录cursor初始位置
+    private Vector3 defaultCursorPos;
     //计算所需增加的高度
     private float bgStartHeight;
     private Vector2 bgSize;
@@ -36,6 +36,7 @@ public class HeroMenuView : UIBase {
         CurrentUIType.UIForms_ShowMode = UIFormShowMode.Normal;
         heroOption = HeroProperty.HeroOption.Instance();
         defaultSize = menuBg.rectTransform.sizeDelta;
+        defaultCursorPos = optionCursor.transform.position / 100;
     }
 
     /// <summary>
@@ -43,8 +44,9 @@ public class HeroMenuView : UIBase {
     /// </summary>
     public void InitMenu()
     {
-        optionButton.Clear();
         countOptions = 0;
+        optionIdx = 0;
+        funcIdx = 0;
         GetOptions();
 
         //计算背景显示
@@ -61,20 +63,19 @@ public class HeroMenuView : UIBase {
     {
         InitMenu();
         base.Display();
-        optionIdx = 0;
-        funcIdx = 0;
         RegisterKeyBoardEvent();
     }
 
     public override void Hiding()
     {
         base.Hiding();
-        GameObjectPool.Instance().PushPool(optionButton, BUTTON_PATH);
+        GameObjectPool.Instance().PushPool(optionButton, MainProperty.BUTTON_PATH);
         optionButton.Clear();
         UnRegisterKeyBoardEvent();
         funcDic.Clear();
         funcArray = new int[10];
         menuBottom.rectTransform.position += new Vector3(0, bottomSize.y / 100, 0);
+        optionCursor.transform.position = defaultCursorPos;
     }
 
     /// <summary>
@@ -84,7 +85,7 @@ public class HeroMenuView : UIBase {
     {
         countOptions += 1;
         //GameObject btn = Instantiate(optionPrefab) as GameObject;
-        GameObject btn = GameObjectPool.Instance().GetPool(BUTTON_PATH, Vector3.zero);
+        GameObject btn = GameObjectPool.Instance().GetPool(MainProperty.BUTTON_PATH, Vector3.zero);
         btn.transform.SetParent(uiContent.transform);
         btn.transform.SetSiblingIndex(heroOption.optionValue[option]);
         btn.transform.localScale = Vector3.one;

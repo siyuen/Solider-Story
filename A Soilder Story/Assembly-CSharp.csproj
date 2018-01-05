@@ -64,6 +64,7 @@
      <Compile Include="Assets\Scripts\Game\GameObjectPool.cs" />
      <Compile Include="Assets\Scripts\Game\LevelManager.cs" />
      <Compile Include="Assets\Scripts\Game\MainManager.cs" />
+     <Compile Include="Assets\Scripts\Game\MainProperty.cs" />
      <Compile Include="Assets\Scripts\GameManager.cs" />
      <Compile Include="Assets\Scripts\Helps\ResourcesMgr.cs" />
      <Compile Include="Assets\Scripts\Helps\UIMaskMgr.cs" />

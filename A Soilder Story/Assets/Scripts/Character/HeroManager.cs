@@ -6,7 +6,6 @@ using UIFramework;
 
 public class HeroManager : QSingleton<HeroManager> {
 
-    public const string HERO_PATH = "Prefabs/Game/hero";
     //活着的herolist
     private List<HeroController> liveHeroList = new List<HeroController>();
     //死亡的herolist
@@ -23,7 +22,7 @@ public class HeroManager : QSingleton<HeroManager> {
         standbyCount = 0;
         heroContent = new GameObject();
         heroContent.name = "Hero";
-        GameObject hero = GameObjectPool.Instance().GetPool(HERO_PATH, MainManager.Instance().Idx2Pos2(90));
+        GameObject hero = GameObjectPool.Instance().GetPool(MainProperty.HERO_PATH, MainManager.Instance().Idx2Pos2(90));
         hero.transform.SetParent(heroContent.transform);
         liveHeroList.Add(hero.GetComponent<HeroController>());
         //liveHeroList[0].Init();
