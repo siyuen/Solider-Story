@@ -46,7 +46,7 @@ public class Character : MonoBehaviour {
 
     public virtual void ShowMoveRange()
     {
-        mainInstance.ShowMoveRange(this.transform.position, 2, 1);
+        mainInstance.ShowMoveRange(this.transform.position, 3, 1);
     }
 
     public virtual void HideMoveRange()

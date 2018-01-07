@@ -58,6 +58,7 @@ public class HeroController : Character
         mAnimator.SetBool("bSelected", false);
         heroState = HeroState.stop;
         mainInstance.curHero = null;
+        mainInstance.HideAttackRange();
         HideMenuUI();
         if (HeroManager.Instance().SetStandby())
             StartCoroutine(DelayToInvoke.DelayToInvokeDo(() => { mainInstance.SetEnemyRound(); }, 1f));

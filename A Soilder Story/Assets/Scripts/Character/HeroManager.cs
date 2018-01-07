@@ -22,7 +22,7 @@ public class HeroManager : QSingleton<HeroManager> {
         standbyCount = 0;
         heroContent = new GameObject();
         heroContent.name = "Hero";
-        GameObject hero = GameObjectPool.Instance().GetPool(MainProperty.HERO_PATH, MainManager.Instance().Idx2Pos2(90));
+        GameObject hero = GameObjectPool.Instance().GetPool(MainProperty.HERO_PATH, MainManager.Instance().Idx2Pos2(95));
         hero.transform.SetParent(heroContent.transform);
         liveHeroList.Add(hero.GetComponent<HeroController>());
         //liveHeroList[0].Init();
