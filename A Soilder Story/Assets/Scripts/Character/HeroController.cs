@@ -27,6 +27,7 @@ public class HeroController : Character
         base.Init();
         heroState = HeroState.normal;
         bSelected = false;
+        bStandby = false;
         bMove = false;
         mID = mainInstance.Pos2Idx(this.transform.position);
         mainInstance.GetMapNode(mID).locatedHero = this;
@@ -103,7 +104,9 @@ public class HeroController : Character
         SetAnimator("bSelected", bSelected);
         SetAnimator("bNormal", true);
         mID = fromIdx;
+        mainInstance.GetMapNode(mID).locatedHero = this;
         mainInstance.SetCursorPos(mID);
+        mainInstance.HideRoad();
 
         HideMoveRange();
         mainInstance.ShowAllUI();
@@ -118,20 +121,16 @@ public class HeroController : Character
         heroState = HeroState.normal;
         if (fromIdx != mID)
         {
+            mainInstance.GetMapNode(mID).locatedHero = null;
             this.transform.position = mainInstance.Idx2Pos2(fromIdx);
             mID = fromIdx;
-            SetAnimator("bSelected", true);
-            SetAnimator(dirStr, false);
-            ShowMoveRange();
-            HideMenuUI();
+            mainInstance.ShowRoad(mainInstance.GetCursorIdx());
         }
-        else
-        {
-            SetAnimator("bSelected", true);
-            SetAnimator(dirStr, false);
-            ShowMoveRange();
-            HideMenuUI();
-        }
+        SetAnimator("bSelected", true);
+        SetAnimator(dirStr, false);
+        mainInstance.HideAttackRange();
+        ShowMoveRange();
+        HideMenuUI();
     }
 
     /// <summary>
@@ -156,6 +155,7 @@ public class HeroController : Character
     private void ShowMenuUI()
     {
         mainInstance.UnRegisterKeyBoradEvent();
+        mainInstance.SetCursorActive(false);
         UIManager.Instance().ShowUIForms("HeroMenu");
         mainInstance.HideAllUI();
     }
@@ -167,6 +167,7 @@ public class HeroController : Character
     {
         UIManager.Instance().CloseUIForms("HeroMenu");
         mainInstance.RegisterKeyBoardEvent();
+        mainInstance.SetCursorActive(true);
     }
 
 }

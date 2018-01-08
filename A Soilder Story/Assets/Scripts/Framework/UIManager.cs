@@ -70,6 +70,7 @@ namespace UIFramework
                 _DicFormsPaths.Add("LandData_2", @"Prefabs\UI\Terrain\LandData_2");
                 _DicFormsPaths.Add("GameGoal_1", @"Prefabs\UI\GameGoal_1");
                 _DicFormsPaths.Add("GameGoal_2", @"Prefabs\UI\GameGoal_2");
+                _DicFormsPaths.Add("WeaponSelectMenu", @"Prefabs\UI\View\WeaponSelectMenu");
             }
 
             //获取uiCamera

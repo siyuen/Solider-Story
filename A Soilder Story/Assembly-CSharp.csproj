@@ -80,6 +80,7 @@
      <Compile Include="Assets\Scripts\UI\HeroMenuView.cs" />
      <Compile Include="Assets\Scripts\UI\LandDataView_1.cs" />
      <Compile Include="Assets\Scripts\UI\LandDataView_2.cs" />
+     <Compile Include="Assets\Scripts\UI\WeaponSelectView.cs" />
      <Compile Include="Assets\Tiled2Unity\Scripts\Runtime\CircleObject.cs" />
      <Compile Include="Assets\Tiled2Unity\Scripts\Runtime\GPUInstancing.cs" />
      <Compile Include="Assets\Tiled2Unity\Scripts\Runtime\GameObjectExtensions.cs" />

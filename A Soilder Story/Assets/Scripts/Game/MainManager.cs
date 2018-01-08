@@ -504,7 +504,7 @@ public class MainManager : QMonoSingleton<MainManager>
             if (node.bVisited && !node.locatedEnemy && !node.locatedHero)
             {
                 //隐藏路径
-                ShowRoad(curHero.mID);
+                HideRoad();
                 GetMapNode(curHero.mID).locatedHero = null;
                 node.locatedHero = curHero;  
                 curHero.MoveTo(node.GetID());
@@ -667,7 +667,6 @@ public class MainManager : QMonoSingleton<MainManager>
             nodeObjList.Clear();
             GameObjectPool.Instance().PushPool(attackObjList, MainProperty.ATTACKNODE_PATH);
             attackObjList.Clear();
-            ReSet();
         }
     }
 
@@ -676,16 +675,7 @@ public class MainManager : QMonoSingleton<MainManager>
     /// </summary>
     public void ShowRoad(int id)
     {
-        //需要先隐藏
-        roadIdxList.Clear();
-        if (roadObjList.Count > 0)
-        {
-            for (int j = 0; j < roadObjList.Count; j++)
-            {
-                GameObjectPool.Instance().PushPool(roadObjList[j].road, roadObjList[j].path);
-            }
-        }
-        roadObjList.Clear();
+        HideRoad();
         //原点不需要显示
         if (id == curHero.mID)
             return;
@@ -698,8 +688,6 @@ public class MainManager : QMonoSingleton<MainManager>
         }
         roadIdxList.Add(curHero.mID);
         //实例化路线
-        //记录拐点
-        int corner = 0;
         //记录上一次方向
         int dir = 0;
         int lastdir = 0;
@@ -814,6 +802,22 @@ public class MainManager : QMonoSingleton<MainManager>
     }
 
     /// <summary>
+    /// 隐藏路径
+    /// </summary>
+    public void HideRoad()
+    {
+        roadIdxList.Clear();
+        if (roadObjList.Count > 0)
+        {
+            for (int j = 0; j < roadObjList.Count; j++)
+            {
+                GameObjectPool.Instance().PushPool(roadObjList[j].road, roadObjList[j].path);
+            }
+        }
+        roadObjList.Clear();
+    }
+
+    /// <summary>
     /// 获取攻击块的idx
     /// </summary>
     public List<int> GetAttackHeroList()
@@ -858,7 +862,7 @@ public class MainManager : QMonoSingleton<MainManager>
                 parent = parent.parentMapNode;
             }
 
-            //未超出移动范围
+            //未超出移动范围;按照右下左上顺序来算
             if (range <= moveRange)
             {
                 if (IsInMap(w + 1) && !mapNodeList[w + 1].bVisited && (w + 1) / mapXNode == nowRow)  //如果右边节点存在且未被访问
@@ -951,6 +955,8 @@ public class MainManager : QMonoSingleton<MainManager>
     /// </summary>
     public void AddMoveNodeInList(int w, int idx)
     {
+        if (mapNodeList[idx].parentMapNode != null)
+            return;
         mapNodeList[idx].moveValue = mapNodeList[idx].nodeValue + mapNodeList[w].moveValue;
         rangeQueue.Enqueue(idx);
         mapNodeList[idx].parentMapNode = mapNodeList[w];
@@ -1037,7 +1043,7 @@ public class MainManager : QMonoSingleton<MainManager>
     }
     #endregion
 
-    #region 公有方法:判断是否在地图内;转换idx跟pos;UI显示;判断两个idx的方位
+    #region 公有方法:判断是否在地图内;转换idx跟pos;UI显示;判断两个idx的方位;设置光标可见性
     /// <summary>
     /// 判断是否在地图内
     /// </summary>
@@ -1161,6 +1167,22 @@ public class MainManager : QMonoSingleton<MainManager>
             return;
         cursorIdx = idx;
         mouseCursor.transform.position = Idx2Pos(idx);
+    }
+
+    /// <summary>
+    /// 获取光标idx
+    /// </summary>
+    public int GetCursorIdx()
+    {
+        return cursorIdx;
+    }
+
+    /// <summary>
+    /// 设置光标可见性
+    /// </summary>
+    public void SetCursorActive(bool bval)
+    {
+        mouseCursor.SetActive(bval);
     }
 
     /// <summary>

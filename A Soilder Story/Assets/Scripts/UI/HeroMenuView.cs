@@ -8,12 +8,19 @@ public class HeroMenuView : UIBase {
 
     public Image menuBg;
     public Image menuBottom;
+    public Image menuLeft;
+    public Image menuRight;
     public GameObject uiContent;
     public Image optionCursor;
     private HeroProperty.HeroOption heroOption;
     private int countOptions;
     //记录cursor初始位置
     private Vector3 defaultCursorPos;
+    //记录左右边界初始size跟pos
+    private Vector3 leftDefaultPos;
+    private Vector3 rightDefaultPos;
+    private Vector2 leftDefaultSize;
+    private Vector2 rightDefaultSize;
     //计算所需增加的高度
     private float bgStartHeight;
     private Vector2 bgSize;
@@ -37,6 +44,10 @@ public class HeroMenuView : UIBase {
         heroOption = HeroProperty.HeroOption.Instance();
         defaultSize = menuBg.rectTransform.sizeDelta;
         defaultCursorPos = optionCursor.transform.position / 100;
+        leftDefaultPos = menuLeft.transform.position / 100;
+        rightDefaultPos = menuRight.transform.position / 100;
+        leftDefaultSize = menuLeft.rectTransform.sizeDelta;
+        rightDefaultSize = menuRight.rectTransform.sizeDelta;
     }
 
     /// <summary>
@@ -49,14 +60,29 @@ public class HeroMenuView : UIBase {
         funcIdx = 0;
         GetOptions();
 
+        InitMenuRect();
         //计算背景显示
-        bgSize = defaultSize;
-        bottomSize = defaultSize;
         bgStartHeight = bgSize.y;
         bgSize.y = bgStartHeight * countOptions;
         bottomSize.y = bgSize.y - bgStartHeight;
         menuBg.rectTransform.sizeDelta = bgSize;
         menuBottom.rectTransform.position -= new Vector3(0, bottomSize.y / 100, 0);
+        //处理左右边界
+        menuRight.transform.position -= new Vector3(0, defaultSize.y / 100 * (countOptions - 1) / 2, 0);
+        menuRight.rectTransform.sizeDelta = new Vector2(rightDefaultSize.x, rightDefaultSize.y * countOptions);
+        menuLeft.transform.position -= new Vector3(0, defaultSize.y / 100 * (countOptions - 1) / 2, 0);
+        menuLeft.rectTransform.sizeDelta = new Vector2(leftDefaultSize.x, leftDefaultSize.y * countOptions);
+    }
+
+    //menu的ui数据初始化
+    private void InitMenuRect()
+    {
+        bgSize = defaultSize;
+        bottomSize = defaultSize;
+        menuRight.transform.position = rightDefaultPos;
+        menuRight.rectTransform.sizeDelta = rightDefaultSize;
+        menuLeft.transform.position = leftDefaultPos;
+        menuLeft.rectTransform.sizeDelta = leftDefaultSize;
     }
 
     public override void Display()
@@ -64,6 +90,7 @@ public class HeroMenuView : UIBase {
         InitMenu();
         base.Display();
         RegisterKeyBoardEvent();
+        UpdateOption();
     }
 
     public override void Hiding()
@@ -121,7 +148,6 @@ public class HeroMenuView : UIBase {
             //AddItem(option);
             //RegisterButtonObjectEvent(name, p => Attack());
             funcDic.Add(heroOption.optionValue[option], Attack);
-            MainManager.Instance().ShowAttackRange();
             SortFunc(option);
         }
         //检测物品
@@ -191,6 +217,7 @@ public class HeroMenuView : UIBase {
         {
             optionCursor.transform.position += new Vector3(0, bgStartHeight / 100, 0);
         }
+        UpdateOption();
     }
 
     private void OnDownArrowDown()
@@ -205,6 +232,7 @@ public class HeroMenuView : UIBase {
         {
             optionCursor.transform.position -= new Vector3(0, bgStartHeight / 100, 0);
         }
+        UpdateOption();
     }
 
     private void OnConfirmDown()
@@ -215,6 +243,19 @@ public class HeroMenuView : UIBase {
     private void OnCancelDown()
     {
         MainManager.Instance().curHero.CancelMoveDone();
+    }
+
+    /// <summary>
+    /// 更新选项状态
+    /// </summary>
+    private void UpdateOption()
+    {
+        //攻击选项会显示攻击范围
+        HeroProperty.HeroOptions option = HeroProperty.HeroOptions.Attack;
+        if (funcDic.ContainsKey(heroOption.optionValue[option]) && optionIdx == heroOption.optionValue[option])
+            MainManager.Instance().ShowAttackRange();
+        else
+            MainManager.Instance().HideAttackRange();
     }
 
     /// <summary>
@@ -238,7 +279,8 @@ public class HeroMenuView : UIBase {
 
     private void Attack()
     {
-        Debug.Log("攻击");
+        UIManager.Instance().CloseUIForms("HeroMenu");
+        OpenUIForm("WeaponSelectMenu");
     }
 
     private void Item()

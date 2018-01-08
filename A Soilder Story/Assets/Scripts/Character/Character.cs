@@ -174,10 +174,11 @@ public class Character : MonoBehaviour {
         }
 
         int from = mainInstance.Pos2Idx(this.transform.position);
-        DoAStar(from, to);  //所有的移动路径存在colse中
+        //DoAStar(from, to);  //所有的移动路径存在colse中
         path.Clear();
-        int parentIdx = close[close.Count - 1];
-        MapNode parent = mainInstance.GetMapNode(parentIdx);
+        //int parentIdx = close[close.Count - 1];
+        //MapNode parent = mainInstance.GetMapNode(parentIdx);
+        MapNode parent = mainInstance.GetMapNode(to);
         while (parent.parentMapNode != null)  //通过父节点计算路径存于path中
         {
             path.Add(parent.GetID());
@@ -203,14 +204,15 @@ public class Character : MonoBehaviour {
         }
 
         int from = mainInstance.Pos2Idx(this.transform.position);
-        DoAStar(from, to.GetID());  //所有的移动路径存在colse中
+        //DoAStar(from, to.GetID());  //所有的移动路径存在colse中
         path.Clear();
-        int parentIdx = close[close.Count - 1];
-        MapNode parent = mainInstance.GetMapNode(parentIdx);
-        while (parent.parentMapNode != null)  //通过父节点计算路径存于path中
+        //int parentIdx = close[close.Count - 1];
+        //MapNode parent = mainInstance.GetMapNode(parentIdx);
+        while (to.parentMapNode != null)  //通过父节点计算路径存于path中
         {
-            path.Add(parent.GetID());
-            parent = parent.parentMapNode;
+            path.Add(to.GetID());
+            Debug.Log(to.GetID());
+            to = to.parentMapNode;
         }
         close.Clear();
         if (path.Count == 0)
