@@ -76,7 +76,8 @@ public class LevelManager : QMonoSingleton<LevelManager> {
             tiles[i].Init(id, data.Value, data.MoveValue);
             Tiles[id] = tiles[i];
         }
-        MainManager.Instance().SetMapData(map, new List<MapNode>(Tiles));
+        MainManager.Instance().SetMapData(map);
+        MoveManager.Instance().SetMap(new List<MapNode>(Tiles));
     }
 
     public int GetNodeID(Vector2 pos)

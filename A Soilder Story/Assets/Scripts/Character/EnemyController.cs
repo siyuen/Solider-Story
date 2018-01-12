@@ -36,12 +36,23 @@ public class EnemyController : Character
             Move();
 	}
 
+    public override void MoveTo(int to)
+    {
+        mainInstance.GetMapNode(mID).locatedEnemy = null;
+        base.MoveTo(to);
+    }
+
+    public override void MoveTo(MapNode to)
+    {
+        mainInstance.GetMapNode(mID).locatedEnemy = null;
+        base.MoveTo(to);
+    }
     //搜索附近hero
     public void SearchHero()
     {
-        mainInstance.DoMoveRange(this.transform.position, 2, 1);
-        mainInstance.AddAttackNodeInList(1, mID);
-        attackHeroList = mainInstance.GetAttackHeroList();
+        MoveManager.Instance().DoMoveRange(this.transform.position, 2, 1);
+        MoveManager.Instance().AddAttackNodeInList(1, mID);
+        attackHeroList = MoveManager.Instance().GetAttackHeroList();
         if (attackHeroList.Count > 0)
         {
             targetIdx = mainInstance.GetMapNode(attackHeroList[0]).GetID();
@@ -62,7 +73,6 @@ public class EnemyController : Character
         {
             bSelected = true;
             ShowMoveRange();
-            Moved(false);
             mainInstance.HideAllUI();
         }
     }
@@ -74,7 +84,6 @@ public class EnemyController : Character
     {
         bSelected = false;
         HideMoveRange();
-        Moved(true);
         mainInstance.ShowAllUI();
     }
 
@@ -95,16 +104,5 @@ public class EnemyController : Character
         base.Standby();
         if(EnemyManager.Instance().SetStandby())
             StartCoroutine(DelayToInvoke.DelayToInvokeDo(() => { MainManager.Instance().SetHeroRound(); }, 1f));
-    }
-
-    /// <summary>
-    /// 鼠标进入enemy
-    /// </summary>
-    public void Moved(bool b)
-    {
-        if (b)
-            UIManager.Instance().ShowUIForms("CharacterData");
-        else
-            UIManager.Instance().CloseUIForms("CharacterData"); 
     }
 }

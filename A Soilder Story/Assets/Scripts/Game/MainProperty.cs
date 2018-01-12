@@ -9,15 +9,18 @@ public class MainProperty {
     public static string RANGENODE_PATH = "Prefabs/Game/moveTile";
     public static string ATTACKNODE_PATH = "Prefabs/Game/attackTile";
     public static string HEROMENU_PATH = "Prefabs/UI/Character/HeroMenu";
-    public static string NORMALCURSOR_PATH = "Prefabs/Game/Cursor";
     //enemy
     public static string ENEMY_PATH = "Prefabs/Game/enemy";  
     //hero
     public static string HERO_PATH = "Prefabs/Game/hero";
+    //cursor
+    public static string ATTACKCURSOR_PATH = "Prefabs/Game/AttackCursor";
+    public static string NORMALCURSOR_PATH = "Prefabs/Game/Cursor";
     //UI
     public static string HERO_BG = "Sprites/UI/HeroDataBg";
     public static string ENEMY_BG = "Sprites/UI/EnemyDataBg";
     public static string BUTTON_PATH = "Prefabs/UI/Normal/Button";
+    public static string ITEM_PATH = "Prefabs/UI/Normal/Item";
     //Road
     public static string ROADBODY_LEFT_PATH = "Prefabs/Game/Road/RoadBody_left";
     public static string ROADBODY_UP_PATH = "Prefabs/Game/Road/RoadBody_up";

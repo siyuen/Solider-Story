@@ -22,32 +22,7 @@ public class MainManager : QMonoSingleton<MainManager>
     private int mapYNode;  //map纵轴有多少个node
     private int nodeWidth;  //node的宽高
     private int nodeHeight;
-    private Queue<int> rangeQueue = new Queue<int>();  //用于计算移动范围
-    [SerializeField]
-    private List<MapNode> mapNodeList;  //地图的所有图块
-    private List<int> rangeNodeList = new List<int>();  //移动范围的块的idx
-    private List<GameObject> nodeObjList = new List<GameObject>();  //移动范围的块
-    private List<int> endNodeList = new List<int>();  //记录周围有移动不了的块的idx
-    private List<int> attackNodeList = new List<int>();  //攻击范围的块的idx
-    private List<GameObject> attackObjList = new List<GameObject>();  //攻击范围的块
-    private GameObject moveRangeObj;  //移动范围的块的parent
-    private List<int> attackHeroList = new List<int>();  //在攻击范围内的hero
-    //显示移动路径
-    //移动路径obj容器
-    private GameObject roadContent;
-    //移动路径list
-    private struct RoadObj
-    {
-        public RoadObj(string path, GameObject obj)
-        {
-            this.path = path;
-            road = obj;
-        }
-        public string path;
-        public GameObject road;
-    }
-    private List<int> roadIdxList = new List<int>();
-    private List<RoadObj> roadObjList = new List<RoadObj>();
+
 
     void Awake()
     {
@@ -55,10 +30,6 @@ public class MainManager : QMonoSingleton<MainManager>
         HeroManager.Instance().Init(1);
         EnemyManager.Instance().Init(1);
 
-        moveRangeObj = new GameObject();
-        moveRangeObj.name = "MoveRange";
-        roadContent = new GameObject();
-        roadContent.name = "Road";
         //初始化英雄回合
         SetHeroRound();
         //初始化光标
@@ -66,6 +37,7 @@ public class MainManager : QMonoSingleton<MainManager>
         //注册事件
         RegisterKeyBoardEvent();
         CursorUpdate();
+        UpdateUIPos();
     }
 
     /// <summary>
@@ -83,14 +55,13 @@ public class MainManager : QMonoSingleton<MainManager>
     /// <summary>
     /// 设置地图信息
     /// </summary>
-    public void SetMapData(TiledMap map, List<MapNode> mapNodeList)
+    public void SetMapData(TiledMap map)
     {
         this.map = map;
         mapXNode = map.NumTilesWide;
         mapYNode = map.NumTilesHigh;
         nodeWidth = map.TileWidth;
         nodeHeight = map.TileHeight;
-        this.mapNodeList = mapNodeList;
     }
 
     #region 回合设定
@@ -127,6 +98,27 @@ public class MainManager : QMonoSingleton<MainManager>
 
     #region UI相关
     /// <summary>
+    /// 显示所有game相关UI
+    /// </summary>
+    public void ShowAllUI()
+    {
+        UpdateUIPos();
+    }
+
+    /// <summary>
+    /// 隐藏相关UI
+    /// </summary>
+    public void HideAllUI()
+    {
+        UIManager.Instance().CloseUIForms("LandData_1");
+        UIManager.Instance().CloseUIForms("LandData_2");
+        UIManager.Instance().CloseUIForms("GameGoal_1");
+        UIManager.Instance().CloseUIForms("GameGoal_2");
+        UIManager.Instance().CloseUIForms("CharacterData_1");
+        UIManager.Instance().CloseUIForms("CharacterData_2");
+    }
+
+    /// <summary>
     /// 更新UIpos
     /// </summary>
     public void UpdateUIPos()
@@ -134,24 +126,62 @@ public class MainManager : QMonoSingleton<MainManager>
         if (curHero)
             return;
         UIManager uiInstance = UIManager.Instance();
+        //处理人物信息ui
+        if (curMouseHero || curMouseEnemy)
+        {
+            if (Idx2ListPos(cursorIdx).y >= mapYNode / 2)
+            {
+                if (!uiInstance.GetUIActive("CharacterData_1"))
+                {
+                    uiInstance.ShowUIForms("CharacterData_1");               
+                    uiInstance.CloseUIForms("CharacterData_2");
+                }
+                uiInstance.GetUI("CharacterData_1").GetComponent<CharacterDataView_1>().SetData();
+            }
+            else
+            {
+                if (!uiInstance.GetUIActive("CharacterData_2"))
+                {
+                    uiInstance.ShowUIForms("CharacterData_2");
+                    uiInstance.CloseUIForms("CharacterData_1");
+                }
+                uiInstance.GetUI("CharacterData_2").GetComponent<CharacterDataView_2>().SetData();
+            }
+        }
+        else
+        {
+            uiInstance.CloseUIForms("CharacterData_2");
+            uiInstance.CloseUIForms("CharacterData_1");
+        }    
         //地图MapNode
         if (Idx2ListPos(cursorIdx).x >= mapXNode / 2)
         {
             //一四象限
-            uiInstance.ShowUIForms("LandData_1");
-            uiInstance.GetUI("LandData_1").GetComponent<LandDataView_1>().UpdataData(GetMapNode(cursorIdx));
-            uiInstance.CloseUIForms("LandData_2");
-            //第四象限
-            if (Idx2ListPos(cursorIdx).y >= mapYNode / 2)
+            if (uiInstance.GetUIActive("CharacterData_2"))
             {
+                uiInstance.ShowUIForms("LandData_2");
+                uiInstance.GetUI("LandData_2").GetComponent<LandDataView_2>().UpdataData(GetMapNode(cursorIdx));
+                uiInstance.CloseUIForms("LandData_1");
                 uiInstance.ShowUIForms("GameGoal_1");
                 uiInstance.CloseUIForms("GameGoal_2");
             }
             else
             {
-                uiInstance.ShowUIForms("GameGoal_2");
-                uiInstance.CloseUIForms("GameGoal_1");
-            }
+                uiInstance.ShowUIForms("LandData_1");
+                uiInstance.GetUI("LandData_1").GetComponent<LandDataView_1>().UpdataData(GetMapNode(cursorIdx));
+                uiInstance.CloseUIForms("LandData_2");
+                //第四象限
+                if (Idx2ListPos(cursorIdx).y >= mapYNode / 2)
+                {
+                    uiInstance.ShowUIForms("GameGoal_1");
+                    uiInstance.CloseUIForms("GameGoal_2");
+                }
+                else
+                {
+                    uiInstance.ShowUIForms("GameGoal_2");
+                    uiInstance.CloseUIForms("GameGoal_1");
+                }
+            }      
         }
         else
         {
@@ -161,10 +191,12 @@ public class MainManager : QMonoSingleton<MainManager>
                 uiInstance.ShowUIForms("GameGoal_1");
                 uiInstance.CloseUIForms("GameGoal_2");
             }
+            else
+                uiInstance.ShowUIForms("GameGoal_1");
             uiInstance.ShowUIForms("LandData_2");
             uiInstance.GetUI("LandData_2").GetComponent<LandDataView_2>().UpdataData(GetMapNode(cursorIdx));
             uiInstance.CloseUIForms("LandData_1");
-        }
+        }  
     }
     #endregion
 
@@ -276,7 +308,7 @@ public class MainManager : QMonoSingleton<MainManager>
             //鼠标移出hero
             if (curMouseHero != null)
             {
-                curMouseHero.Moved(false);
+                //curMouseHero.Moved(false);
                 curMouseHero = null;
             }
             if (mouseCursor.activeSelf)
@@ -284,7 +316,7 @@ public class MainManager : QMonoSingleton<MainManager>
             //鼠标移出enemy
             if (curMouseEnemy != null)
             {
-                curMouseEnemy.Moved(false);
+                //curMouseEnemy.Moved(false);
                 curMouseEnemy = null;
             }
         }
@@ -300,7 +332,7 @@ public class MainManager : QMonoSingleton<MainManager>
         {
             //鼠标进入hero
             curMouseHero = hit.collider.GetComponent<HeroController>();
-            curMouseHero.Moved(true);
+            //curMouseHero.Moved(true);
             if (mouseCursor.activeSelf)
                 cursorAnimator.SetBool("Hero", true);
         }
@@ -310,7 +342,7 @@ public class MainManager : QMonoSingleton<MainManager>
             curMouseEnemy = hit.collider.GetComponent<EnemyController>();
             if (!curMouseEnemy)
                 return;
-            curMouseEnemy.Moved(true);
+           // curMouseEnemy.Moved(true);
         }
     }
 
@@ -380,7 +412,6 @@ public class MainManager : QMonoSingleton<MainManager>
         input.RegisterKeyDownEvent(TurnRight, EventType.KEY_RIGHTARROW);
         input.RegisterKeyDownEvent(TurnConfirm, EventType.KEY_Z);
         input.RegisterKeyDownEvent(TurnCancel, EventType.KEY_X);
-        
     }
 
     /// <summary>
@@ -407,16 +438,13 @@ public class MainManager : QMonoSingleton<MainManager>
         {
             cursorIdx = id;
             mouseCursor.transform.position = Idx2Pos(id);
-            UpdateUIPos();
             CursorUpdate();
+            UpdateUIPos();
             //选择hero情况下，显示路径
             if (curHero)
             {
-                //攻击的块不显示
-                if (attackNodeList.Contains(id))
-                    ShowRoad(cursorIdx + mapXNode);
-                else
-                    ShowRoad(id);
+                if (GetMapNode(id).canMove)
+                    MoveManager.Instance().ShowRoad(id);
             }
         }
     }
@@ -428,14 +456,12 @@ public class MainManager : QMonoSingleton<MainManager>
         {
             cursorIdx = id;
             mouseCursor.transform.position = Idx2Pos(id);
-            UpdateUIPos();
             CursorUpdate();
+            UpdateUIPos();
             if (curHero)
             {
-                if (attackNodeList.Contains(id))
-                    ShowRoad(cursorIdx - mapXNode);
-                else
-                    ShowRoad(id);
+                if (GetMapNode(id).canMove)
+                    MoveManager.Instance().ShowRoad(id);
             }
         }
     }
@@ -449,14 +475,12 @@ public class MainManager : QMonoSingleton<MainManager>
         {
             cursorIdx = id;
             mouseCursor.transform.position = Idx2Pos(id);
-            UpdateUIPos();
             CursorUpdate();
+            UpdateUIPos();
             if (curHero)
             {
-                if (attackNodeList.Contains(id))
-                    ShowRoad(cursorIdx + 1);
-                else
-                    ShowRoad(id);
+                if (GetMapNode(id).canMove)
+                    MoveManager.Instance().ShowRoad(id);
             }
         }
     }
@@ -470,14 +494,12 @@ public class MainManager : QMonoSingleton<MainManager>
         {
             cursorIdx = id;
             mouseCursor.transform.position = Idx2Pos(id);
-            UpdateUIPos();
             CursorUpdate();
+            UpdateUIPos();
             if (curHero)
             {
-                if (attackNodeList.Contains(id))
-                    ShowRoad(cursorIdx - 1);
-                else
-                    ShowRoad(id);
+                if (GetMapNode(id).canMove)
+                    MoveManager.Instance().ShowRoad(id);
             }
         }
     }
@@ -503,16 +525,12 @@ public class MainManager : QMonoSingleton<MainManager>
             //如果点击的块在移动范围内且没有其他人物则可以移动
             if (node.bVisited && !node.locatedEnemy && !node.locatedHero)
             {
-                //隐藏路径
-                HideRoad();
-                GetMapNode(curHero.mID).locatedHero = null;
                 node.locatedHero = curHero;  
                 curHero.MoveTo(node.GetID());
             }
             //是否点击当前hero
             if (node.locatedHero == curHero)
             {
-                GetMapNode(curHero.mID).locatedHero = null;
                 node.locatedHero = curHero;
                 curHero.MoveTo(node.GetID());
             }
@@ -542,8 +560,11 @@ public class MainManager : QMonoSingleton<MainManager>
         if (curHero)
         {
             curHero.CancelSelected();
+            GetMapNode(curHero.mID).locatedHero = curHero;
+            SetCursorPos(curHero.mID);
             curHero = null;
             CursorUpdate();
+            UpdateUIPos();
         }
         else if (curEnemy)
         {
@@ -555,492 +576,44 @@ public class MainManager : QMonoSingleton<MainManager>
     /// <summary>
     /// 光标移动后的update
     /// </summary>
-    private void CursorUpdate()
+    public void CursorUpdate()
     {
+        if (curMouseHero)
+        {
+            curMouseHero.SetAnimator("bMouse", false);
+            curMouseHero = null;
+            cursorAnimator.SetBool("Hero", false);
+        }
+        if (curMouseEnemy)
+        {
+            curMouseEnemy = null;
+        }
+
         //当前mapNode是否有hero
         if (GetMapNode(cursorIdx).locatedHero)
         {
             //判断当前是否有选择hero
-            if (curHero == null)
+            if (!curHero)
             {
                 //鼠标进入hero
                 curMouseHero = GetMapNode(cursorIdx).locatedHero;
-                curMouseHero.Moved(true);
+                curMouseHero.SetAnimator("bMouse", true);
                 if (mouseCursor.activeSelf)
                     cursorAnimator.SetBool("Hero", true);
             }
         }
-        else
-        {
-            //鼠标移出hero
-            if (curMouseHero != null)
-            {
-                curMouseHero.Moved(false);
-                curMouseHero = null;
-            }
-            if (mouseCursor.activeSelf)
-                cursorAnimator.SetBool("Hero", false);
-        }
 
         //当前块是否有ennemy
-        if (GetMapNode(cursorIdx).locatedEnemy && !curHero)
+        if (GetMapNode(cursorIdx).locatedEnemy )
         {
-            //鼠标进入enemy
-            curMouseEnemy = GetMapNode(cursorIdx).locatedEnemy;
-            curMouseEnemy.Moved(true);
-        }
-        else
-        {
-            //鼠标移出enemy
-            if (curMouseEnemy != null)
+            if (!curHero)
             {
-                curMouseEnemy.Moved(false);
-                curMouseEnemy = null;
-            }
+                //鼠标进入enemy
+                curMouseEnemy = GetMapNode(cursorIdx).locatedEnemy;
+            }  
         }
     }
 
-    #endregion
-
-    #region 攻击&移动范围;重置
-    /// <summary>
-    /// 显示移动范围
-    /// </summary>
-    public void ShowMoveRange(Vector2 pos, int moveRange, int attackRange)
-    {
-        DoMoveRange(pos, moveRange, attackRange);
-        if (rangeNodeList.Count > 0)
-        {
-            for (int i = 0; i < rangeNodeList.Count; i++)
-            {
-                Vector3 nodePos = mapNodeList[rangeNodeList[i]].transform.position;
-                GameObject node = GameObjectPool.Instance().GetPool(MainProperty.RANGENODE_PATH, nodePos);
-                nodeObjList.Add(node);
-                node.transform.SetParent(moveRangeObj.transform);
-            }
-        }
-        ShowAttackRange();
-    }
-
-    /// <summary>
-    /// 显示攻击范围
-    /// </summary>
-    public void ShowAttackRange()
-    {
-        if(curEnemy)
-            AddAttackNodeInList(curEnemy.attackRange, curEnemy.mID);
-        if(curHero)
-            AddAttackNodeInList(curHero.attackRange, curHero.mID);
-        if (attackNodeList.Count > 0)
-        {
-            for (int i = 0; i < attackNodeList.Count; i++)
-            {
-                Vector3 nodePos = mapNodeList[attackNodeList[i]].transform.position;
-                GameObject node = GameObjectPool.Instance().GetPool(MainProperty.ATTACKNODE_PATH, nodePos);
-                attackObjList.Add(node);
-                node.transform.SetParent(moveRangeObj.transform);
-            }
-        }
-    }
-
-    /// <summary>
-    /// 隐藏攻击范围
-    /// </summary>
-    public void HideAttackRange()
-    {
-        if (attackNodeList.Count > 0)
-        {
-            GameObjectPool.Instance().PushPool(attackObjList, MainProperty.ATTACKNODE_PATH);
-            attackObjList.Clear();
-        }
-    }
-
-    /// <summary>
-    /// 隐藏移动范围
-    /// </summary>
-    public void HideMoveRange()
-    {
-        if(nodeObjList.Count > 0)
-        {
-            //moveRangeObj.SetActive(false);
-            GameObjectPool.Instance().PushPool(nodeObjList, MainProperty.RANGENODE_PATH);
-            nodeObjList.Clear();
-            GameObjectPool.Instance().PushPool(attackObjList, MainProperty.ATTACKNODE_PATH);
-            attackObjList.Clear();
-        }
-    }
-
-    /// <summary>
-    /// 显示移动路径
-    /// </summary>
-    public void ShowRoad(int id)
-    {
-        HideRoad();
-        //原点不需要显示
-        if (id == curHero.mID)
-            return;
-        //获取当前路线idx
-        MapNode node = GetMapNode(id);
-        while (node.parentMapNode)
-        {
-            roadIdxList.Add(node.GetID());
-            node = node.parentMapNode;
-        }
-        roadIdxList.Add(curHero.mID);
-        //实例化路线
-        //记录上一次方向
-        int dir = 0;
-        int lastdir = 0;
-        for (int j = 0; j < roadIdxList.Count - 1; j++)
-        {
-            //头
-            if (j == 0)
-            {
-                string headpath = MainProperty.ROADHEAD_UP_PATH;
-                string tailpath = MainProperty.ROADBODY_UP_PATH;
-                dir = GetIdx2IdxPos(roadIdxList[j + 1], roadIdxList[j]);
-                if (dir == -1)
-                    return;
-                else if (dir == 1)
-                {
-                    headpath = MainProperty.ROADHEAD_UP_PATH;
-                    tailpath = MainProperty.ROADBODY_UP_PATH;
-                }
-                else if (dir == 2)
-                {
-                    headpath = MainProperty.ROADHEAD_DOWN_PATH;
-                    tailpath = MainProperty.ROADBODY_UP_PATH;
-                }
-                else if (dir == 3)
-                {
-                    headpath = MainProperty.ROADHEAD_LEFT_PATH;
-                    tailpath = MainProperty.ROADBODY_LEFT_PATH;
-                }
-                else if (dir == 4)
-                {
-                    headpath = MainProperty.ROADHEAD_RIGHT_PATH;
-                    tailpath = MainProperty.ROADBODY_LEFT_PATH;
-                }
-                lastdir = dir;
-                GameObject head = GameObjectPool.Instance().GetPool(headpath, Idx2Pos(roadIdxList[j]));
-                head.transform.SetParent(roadContent.transform);
-                roadObjList.Add(new RoadObj(headpath, head));
-                GameObject tail = GameObjectPool.Instance().GetPool(tailpath, Idx2Pos(roadIdxList[j + 1]));
-                tail.transform.SetParent(roadContent.transform);
-                roadObjList.Add(new RoadObj(tailpath, tail));
-            }
-            else
-            {
-                string headpath = MainProperty.ROADHEAD_UP_PATH;
-                string tailpath = MainProperty.ROADBODY_UP_PATH;
-                dir = GetIdx2IdxPos(roadIdxList[j + 1], roadIdxList[j]);
-                if (dir == -1)
-                    return;
-                else if (dir == 1)
-                    tailpath = MainProperty.ROADBODY_UP_PATH;
-                else if (dir == 2)
-                    tailpath = MainProperty.ROADBODY_UP_PATH;
-                else if (dir == 3)
-                    tailpath = MainProperty.ROADBODY_LEFT_PATH;
-                else if (dir == 4)
-                    tailpath = MainProperty.ROADBODY_LEFT_PATH;
-                //如果与上一次方向不一样
-                if (dir != lastdir)
-                {
-                    //上一次是上的话，这次只可能是左/右
-                    if (lastdir == 1)
-                    {
-                        if (dir == 3)
-                            headpath = MainProperty.ROADCORNER_RIGHT2_PATH;
-                        else
-                            headpath = MainProperty.ROADCORNER_LEFT2_PATH;
-                    }
-                    else if (lastdir == 2)
-                    {
-                        if (dir == 3)
-                            headpath = MainProperty.ROADCORNER_RIGHT1_PATH;
-                        else
-                            headpath = MainProperty.ROADCORNER_LEFT1_PATH;
-                    }
-                    else if (lastdir == 3)
-                    {
-                        if (dir == 1)
-                            headpath = MainProperty.ROADCORNER_LEFT1_PATH;
-                        else
-                            headpath = MainProperty.ROADCORNER_LEFT2_PATH;
-                    }
-                    else if (lastdir == 4)
-                    {
-                        if (dir == 1)
-                            headpath = MainProperty.ROADCORNER_RIGHT2_PATH;
-                        else
-                            headpath = MainProperty.ROADCORNER_RIGHT1_PATH;
-                    }
-                    lastdir = dir;
-                    RoadObj road = roadObjList[roadObjList.Count - 1];
-                    GameObjectPool.Instance().PushPool(road.road, road.path);
-                    GameObject head = GameObjectPool.Instance().GetPool(headpath, Idx2Pos(roadIdxList[j]));
-                    head.transform.SetParent(roadContent.transform);
-                    roadObjList[roadObjList.Count - 1] = new RoadObj(headpath, head);
-
-                    GameObject tail = GameObjectPool.Instance().GetPool(tailpath, Idx2Pos(roadIdxList[j + 1]));
-                    tail.transform.SetParent(roadContent.transform);
-                    roadObjList.Add(new RoadObj(tailpath, tail));
-                }
-                else
-                {
-                    if(dir == 1 || dir == 2)
-                        tailpath = MainProperty.ROADBODY_UP_PATH;
-                    else if(dir == 3 || dir == 4)
-                        tailpath = MainProperty.ROADBODY_LEFT_PATH;
-                    GameObject tail = GameObjectPool.Instance().GetPool(tailpath, Idx2Pos(roadIdxList[j + 1]));
-                    tail.transform.SetParent(roadContent.transform);
-                    roadObjList.Add(new RoadObj(tailpath, tail));
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// 隐藏路径
-    /// </summary>
-    public void HideRoad()
-    {
-        roadIdxList.Clear();
-        if (roadObjList.Count > 0)
-        {
-            for (int j = 0; j < roadObjList.Count; j++)
-            {
-                GameObjectPool.Instance().PushPool(roadObjList[j].road, roadObjList[j].path);
-            }
-        }
-        roadObjList.Clear();
-    }
-
-    /// <summary>
-    /// 获取攻击块的idx
-    /// </summary>
-    public List<int> GetAttackHeroList()
-    {
-        return attackHeroList;
-    }
-
-    /// <summary>
-    /// 重置
-    /// </summary>
-    public void ReSet()
-    {
-        for (int i = 0; i < mapNodeList.Count; i++)
-            mapNodeList[i].ReSet();
-        endNodeList.Clear();
-        rangeNodeList.Clear();
-        attackNodeList.Clear();
-        attackHeroList.Clear();
-        roadIdxList.Clear();
-    }
-
-    /// <summary>
-    /// 计算移动范围
-    /// </summary>
-    public void DoMoveRange(Vector2 pos, int moveRange, int attackRange)
-    {
-        ReSet();
-        int id = Pos2Idx(pos);
-        mapNodeList[id].bVisited = true;
-        rangeQueue.Enqueue(id);
-        int range = 0;
-        //能移动到的index
-        while (rangeQueue.Count != 0)
-        {
-            int w = rangeQueue.Dequeue();
-            int nowRow = w / mapXNode;
-            //判断走了几步
-            MapNode parent = mapNodeList[w];
-            if (parent.parentMapNode != null)
-            {
-                range++;
-                parent = parent.parentMapNode;
-            }
-
-            //未超出移动范围;按照右下左上顺序来算
-            if (range <= moveRange)
-            {
-                if (IsInMap(w + 1) && !mapNodeList[w + 1].bVisited && (w + 1) / mapXNode == nowRow)  //如果右边节点存在且未被访问
-                {
-                    if (mapNodeList[w].moveValue + mapNodeList[w + 1].nodeValue <= moveRange)  //未超出移动能力
-                    {
-                        //当前块是否有敌人，有则记录，无则显示移动范围
-                        if (mapNodeList[w + 1].locatedEnemy)
-                        {
-                            if (!attackNodeList.Contains(w + 1))
-                                attackNodeList.Add(w + 1);
-                        }
-                        else
-                            AddMoveNodeInList(w, w + 1);
-                        //当前块是否有hero
-                        if (mapNodeList[w + 1].locatedHero && !attackNodeList.Contains(w + 1))
-                            attackHeroList.Add(w + 1);
-                    }
-                    else
-                    {
-                        endNodeList.Add(w);
-                    }
-                }
-                if (IsInMap(w + mapXNode) && !mapNodeList[w + mapXNode].bVisited)
-                {
-                    if (mapNodeList[w].moveValue + mapNodeList[w + mapXNode].nodeValue <= moveRange)
-                    {
-                        if (mapNodeList[w + mapXNode].locatedEnemy)
-                        {
-                            if (!attackNodeList.Contains(w + mapXNode))
-                                attackNodeList.Add(w + mapXNode);
-                        }
-                        else
-                            AddMoveNodeInList(w, w + mapXNode);
-                        if (mapNodeList[w + mapXNode].locatedHero && !attackNodeList.Contains(w + mapXNode))
-                            attackHeroList.Add(w + mapXNode);
-                    }
-                    else
-                    {
-                        endNodeList.Add(w);
-                    }
-                }
-                if (IsInMap(w - 1) && !mapNodeList[w - 1].bVisited && (w - 1) / mapXNode == nowRow)
-                {
-                    if (mapNodeList[w].moveValue + mapNodeList[w - 1].nodeValue <= moveRange)
-                    {
-                        if (mapNodeList[w - 1].locatedEnemy)
-                        {
-                            if (!attackNodeList.Contains(w - 1))
-                                attackNodeList.Add(w - 1);
-                        }
-                        else
-                            AddMoveNodeInList(w, w - 1);
-                        if (mapNodeList[w - 1].locatedHero && !attackNodeList.Contains(w - 1))
-                            attackHeroList.Add(w - 1);
-                    }
-                    else
-                    {
-                        endNodeList.Add(w);
-                    }
-                }
-                if (IsInMap(w - mapXNode) && !mapNodeList[w - mapXNode].bVisited)
-                {
-                    if (mapNodeList[w].moveValue + mapNodeList[w - mapXNode].nodeValue <= moveRange)
-                    {
-                        if (mapNodeList[w - mapXNode].locatedEnemy)
-                        {
-                            if (!attackNodeList.Contains(w - mapXNode))
-                                attackNodeList.Add(w - mapXNode);
-                        }
-                        else
-                            AddMoveNodeInList(w, w - mapXNode);
-                        if (mapNodeList[w - mapXNode].locatedHero && !attackNodeList.Contains(w - mapXNode))
-                            attackHeroList.Add(w - mapXNode);
-                    }
-                    else
-                    {
-                        endNodeList.Add(w);
-                    }
-                }
-                rangeNodeList.Add(w);
-                mapNodeList[w].canMove = true;
-            }
-            range = 0;
-        }
-    }
-
-    /// <summary>
-    /// 添加idx显示moveRange
-    /// </summary>
-    public void AddMoveNodeInList(int w, int idx)
-    {
-        if (mapNodeList[idx].parentMapNode != null)
-            return;
-        mapNodeList[idx].moveValue = mapNodeList[idx].nodeValue + mapNodeList[w].moveValue;
-        rangeQueue.Enqueue(idx);
-        mapNodeList[idx].parentMapNode = mapNodeList[w];
-        mapNodeList[idx].bVisited = true;
-    }
-
-    /// <summary>
-    /// 添加idx显示attackRange
-    /// </summary>
-    public void AddAttackNodeInList(int attackRange, int idx)
-    {
-        if (endNodeList.Count == 0)
-        {
-            int nowRow = idx / mapXNode;
-            if (IsInMap(idx + 1) && !mapNodeList[idx + 1].bVisited && (idx + 1) / mapXNode == nowRow)
-            {
-                if (!attackNodeList.Contains(idx + 1))
-                    attackNodeList.Add(idx + 1);
-            }
-            if (IsInMap(idx + mapXNode) && !mapNodeList[idx + mapXNode].bVisited)
-            {
-                if (!attackNodeList.Contains(idx + mapXNode))
-                    attackNodeList.Add(idx + mapXNode);
-            }
-            if (IsInMap(idx - 1) && !mapNodeList[idx - 1].bVisited && (idx - 1) / mapXNode == nowRow)
-            {
-                if (!attackNodeList.Contains(idx - 1))
-                    attackNodeList.Add(idx - 1);
-            }
-            if (IsInMap(idx + mapXNode) && !mapNodeList[idx - mapXNode].bVisited)
-            {
-                if (!attackNodeList.Contains(idx - mapXNode))
-                    attackNodeList.Add(idx - mapXNode);
-            }
-        }
-        else
-        {
-            for (int i = 0; i < endNodeList.Count; i++)
-            {
-                int id = endNodeList[i];
-                int nowRow = id / mapXNode;
-                if (IsInMap(id + 1) && !mapNodeList[id + 1].bVisited && (id + 1) / mapXNode == nowRow)
-                {
-                    if (!attackNodeList.Contains(id + 1))
-                    {
-                        attackNodeList.Add(id + 1);
-                        mapNodeList[id + 1].parentMapNode = mapNodeList[id];
-                        if (mapNodeList[id + 1].locatedHero && !attackHeroList.Contains(id + 1))
-                            attackHeroList.Add(id + 1);
-                    }
-                }
-                if (IsInMap(id + mapXNode) && !mapNodeList[id + mapXNode].bVisited)
-                {
-                    if (!attackNodeList.Contains(id + mapXNode))
-                    {
-                        attackNodeList.Add(id + mapXNode);
-                        mapNodeList[id + mapXNode].parentMapNode = mapNodeList[id];
-                        if (mapNodeList[id + mapXNode].locatedHero && !attackHeroList.Contains(id + mapXNode))
-                            attackHeroList.Add(id + mapXNode);
-                    }
-                }
-                if (IsInMap(id - 1) && !mapNodeList[id - 1].bVisited && (id - 1) / mapXNode == nowRow)
-                {
-                    if (!attackNodeList.Contains(id - 1))
-                    {
-                        attackNodeList.Add(id - 1);
-                        mapNodeList[id - 1].parentMapNode = mapNodeList[id];
-                        if (mapNodeList[id - 1].locatedHero && !attackHeroList.Contains(id - 1))
-                            attackHeroList.Add(id - 1);
-                    }
-                }
-                if (IsInMap(id - mapXNode) && !mapNodeList[id - mapXNode].bVisited)
-                {
-                    if (!attackNodeList.Contains(id - mapXNode))
-                    {
-                        attackNodeList.Add(id - mapXNode);
-                        mapNodeList[id - mapXNode].parentMapNode = mapNodeList[id];
-                        if (mapNodeList[id - mapXNode].locatedHero && !attackHeroList.Contains(id - mapXNode))
-                            attackHeroList.Add(id - mapXNode);
-                    }
-                }
-            }
-        }
-    }
     #endregion
 
     #region 公有方法:判断是否在地图内;转换idx跟pos;UI显示;判断两个idx的方位;设置光标可见性
@@ -1124,38 +697,7 @@ public class MainManager : QMonoSingleton<MainManager>
     {
         if (!IsInMap(idx))
             return null;
-        return mapNodeList[idx];
-    }
-
-    /// <summary>
-    /// 显示所有game相关UI
-    /// </summary>
-    public void ShowAllUI()
-    {
-        if (Idx2ListPos(cursorIdx).x >= mapXNode / 2)
-        {
-            UIManager.Instance().ShowUIForms("LandData_1");
-            if (Idx2ListPos(cursorIdx).y >= mapYNode / 2)
-                UIManager.Instance().ShowUIForms("GameGoal_1");
-            else
-                UIManager.Instance().ShowUIForms("GameGoal_2");
-        }
-        else
-        {
-            UIManager.Instance().ShowUIForms("LandData_2");
-            UIManager.Instance().ShowUIForms("GameGoal_1");
-        }
-    }
-
-    /// <summary>
-    /// 隐藏相关UI
-    /// </summary>
-    public void HideAllUI()
-    {
-        UIManager.Instance().CloseUIForms("LandData_1");
-        UIManager.Instance().CloseUIForms("LandData_2");
-        UIManager.Instance().CloseUIForms("GameGoal_1");
-        UIManager.Instance().CloseUIForms("GameGoal_2");
+        return MoveManager.Instance().GetMapNode(idx);
     }
 
     /// <summary>
@@ -1167,6 +709,7 @@ public class MainManager : QMonoSingleton<MainManager>
             return;
         cursorIdx = idx;
         mouseCursor.transform.position = Idx2Pos(idx);
+        CursorUpdate();
     }
 
     /// <summary>

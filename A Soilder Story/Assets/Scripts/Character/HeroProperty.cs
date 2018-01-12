@@ -4,6 +4,9 @@ using UnityEngine;
 using QFramework;
 
 public class HeroProperty{
+
+    public delegate void normalFunc();
+
     public enum HeroOptions
     {
         //
@@ -32,12 +35,6 @@ public class HeroProperty{
             option2Str.Add(HeroOptions.Attack, "攻击");
         }
 
-        public void Init()
-        {
-            //optionList.Add(HeroOptions.Standby);
-            //optionList.Add(HeroOptions.Item);
-        }
-
         /// <summary>
         /// 通过值获取key
         /// </summary>
@@ -55,4 +52,6 @@ public class HeroProperty{
             return option;
         }
     }
+
+
 }

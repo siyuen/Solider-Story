@@ -40,6 +40,18 @@ public class HeroController : Character
             Move();
     }
 
+    public override void MoveTo(int to)
+    {
+        mainInstance.GetMapNode(mID).locatedHero = null;
+        base.MoveTo(to);
+    }
+
+    public override void MoveTo(MapNode to)
+    {
+        mainInstance.GetMapNode(mID).locatedHero = null;
+        base.MoveTo(to);
+    }
+
     public override void Move()
     {
         mAnimator.SetBool("bSelected", false);
@@ -59,12 +71,31 @@ public class HeroController : Character
         mAnimator.SetBool("bSelected", false);
         heroState = HeroState.stop;
         mainInstance.curHero = null;
-        mainInstance.HideAttackRange();
+        MoveManager.Instance().HideAttackRange();
         HideMenuUI();
         if (HeroManager.Instance().SetStandby())
             StartCoroutine(DelayToInvoke.DelayToInvokeDo(() => { mainInstance.SetEnemyRound(); }, 1f));
         else
             mainInstance.ShowAllUI();
+    }
+
+    /// <summary>
+    /// 检测攻击范围内的敌人:根据攻击type
+    /// </summary>
+    public List<int> CheckEnemy()
+    {
+        //范围一
+        List<int> enemy = new List<int>();
+        int col = mainInstance.GetXNode();
+        if (mainInstance.IsInMap(mID + 1) && mainInstance.GetMapNode(mID + 1).locatedEnemy)
+            enemy.Add(mID + 1);
+        else if (mainInstance.IsInMap(mID + col) && mainInstance.GetMapNode(mID + col).locatedEnemy)
+            enemy.Add(mID + col);
+        else if (mainInstance.IsInMap(mID - 1) && mainInstance.GetMapNode(mID - 1).locatedEnemy)
+            enemy.Add(mID - 1);
+        else if (mainInstance.IsInMap(mID - col) && mainInstance.GetMapNode(mID - col).locatedEnemy)
+            enemy.Add(mID - col);
+        return enemy;
     }
 
     /// <summary>
@@ -88,14 +119,14 @@ public class HeroController : Character
             fromIdx = mID;
             SetAnimator("bSelected", bSelected);
             SetAnimator("bNormal", false);
+            SetAnimator("Mouse", false);
             ShowMoveRange();
-            Moved(false);
             mainInstance.HideAllUI();
         }
     }
 
     /// <summary>
-    /// 取消选择
+    /// 取消选择，回到正常状态
     /// </summary>
     public void CancelSelected()
     {
@@ -104,13 +135,7 @@ public class HeroController : Character
         SetAnimator("bSelected", bSelected);
         SetAnimator("bNormal", true);
         mID = fromIdx;
-        mainInstance.GetMapNode(mID).locatedHero = this;
-        mainInstance.SetCursorPos(mID);
-        mainInstance.HideRoad();
-
         HideMoveRange();
-        mainInstance.ShowAllUI();
-        Moved(true);
     }
 
     /// <summary>
@@ -119,34 +144,15 @@ public class HeroController : Character
     public void CancelMoveDone()
     {
         heroState = HeroState.normal;
-        if (fromIdx != mID)
-        {
-            mainInstance.GetMapNode(mID).locatedHero = null;
-            this.transform.position = mainInstance.Idx2Pos2(fromIdx);
-            mID = fromIdx;
-            mainInstance.ShowRoad(mainInstance.GetCursorIdx());
-        }
+        mainInstance.GetMapNode(mID).locatedHero = null;
+        this.transform.position = mainInstance.Idx2Pos2(fromIdx);
+        mID = fromIdx;
         SetAnimator("bSelected", true);
         SetAnimator(dirStr, false);
-        mainInstance.HideAttackRange();
+        MoveManager.Instance().HideAttackRange();
         ShowMoveRange();
+        MoveManager.Instance().ShowRoad(mainInstance.GetCursorIdx());
         HideMenuUI();
-    }
-
-    /// <summary>
-    /// 鼠标移动到人物
-    /// </summary>
-    public void Moved(bool b)
-    {
-        SetAnimator("bMouse", b);
-        if (b)
-        {
-            UIManager.Instance().ShowUIForms("CharacterData");
-        }
-        else
-        {
-            UIManager.Instance().CloseUIForms("CharacterData");
-        }
     }
 
     /// <summary>

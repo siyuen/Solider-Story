@@ -36,22 +36,15 @@ public class Character : MonoBehaviour {
         mAnimator = mTransform.GetComponent<Animator>();
     }
 
-    void Start()
-    {
-    }
-	// Update is called once per frame
-	void Update () {
-        
-	}
-
     public virtual void ShowMoveRange()
     {
-        mainInstance.ShowMoveRange(this.transform.position, 3, 1);
+        MoveManager.Instance().ShowMoveRange(this.transform.position, 3, 1);
     }
 
     public virtual void HideMoveRange()
     {
-        mainInstance.HideMoveRange();
+        MoveManager.Instance().HideMoveRange();
+        MoveManager.Instance().HideRoad();
     }
 
     /// <summary>
@@ -173,7 +166,7 @@ public class Character : MonoBehaviour {
             return;
         }
 
-        int from = mainInstance.Pos2Idx(this.transform.position);
+        //int from = mainInstance.Pos2Idx(this.transform.position);
         //DoAStar(from, to);  //所有的移动路径存在colse中
         path.Clear();
         //int parentIdx = close[close.Count - 1];

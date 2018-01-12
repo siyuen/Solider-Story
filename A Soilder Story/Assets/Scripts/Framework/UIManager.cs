@@ -65,12 +65,14 @@ namespace UIFramework
             if (_DicFormsPaths != null)
             {
                 _DicFormsPaths.Add("HeroMenu", @"Prefabs\UI\Character\HeroMenu");
-                _DicFormsPaths.Add("CharacterData", @"Prefabs\UI\Character\CharacterData");
+                _DicFormsPaths.Add("CharacterData_1", @"Prefabs\UI\Character\CharacterData_1");
+                _DicFormsPaths.Add("CharacterData_2", @"Prefabs\UI\Character\CharacterData_2");
                 _DicFormsPaths.Add("LandData_1", @"Prefabs\UI\Terrain\LandData_1");
                 _DicFormsPaths.Add("LandData_2", @"Prefabs\UI\Terrain\LandData_2");
                 _DicFormsPaths.Add("GameGoal_1", @"Prefabs\UI\GameGoal_1");
                 _DicFormsPaths.Add("GameGoal_2", @"Prefabs\UI\GameGoal_2");
                 _DicFormsPaths.Add("WeaponSelectMenu", @"Prefabs\UI\View\WeaponSelectMenu");
+                _DicFormsPaths.Add("FightData", @"Prefabs\UI\Fight\FightData");
             }
 
             //获取uiCamera
