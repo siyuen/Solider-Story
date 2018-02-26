@@ -4,28 +4,60 @@ using UnityEngine;
 using QFramework;
 
 public class Character : MonoBehaviour {
-                
-    public float moveSpeed = 5f;                            //移动速度
+
+    public const int BAGLIMIT = 5;
+    //Data
+    public int mID;                                         //人物Id
+    public string mName;                                    //名字
+    public string mCareer;                                  //职业
+    public int mLevel;                                      //等级
+    public int mExp;                                        //经验
+    public int tHp;                                         //总血量
+    public int cHp;                                         //当前血量
+
+    public int mPower;                                      //力量
+    public int mSkill;                                      //技术
+    public int mSpeed;                                      //速度
+    public int mLucky;                                      //幸运
+    public int pDefense;                                    //守备
+    public int mDefense;                                    //魔防
+    public int mMove;                                       //移动
+    public int mStrength;                                   //体格
+    public string sImage;                                   //小头像路径
+    public string lImage;                                   //大头像路径
+    public string mPrefab;                                  //预制体路径
+    public string fightPrefab;                              //战斗预制体路径
+    public WeaponData curWeapon;                            //当前装备的武器
+    public int listIdx;                                     //在当前list中的idx
+
+    public GameObject fightRole;                      
+
+    public float moveSpeed = 30f;                           //移动速度
     public Vector3 moveDir = Vector3.zero;                  //移动方向
     public Vector3 lastDir = Vector3.zero;                  //上一步方向
     public Vector3 curDir = Vector3.zero;                   //当前方向
     public string dirStr;                                   //当前方向的string
-    public int posIndex;                                    //当前位置index
+    //public int posIndex;                                    //当前位置index
     public int moveRange;                                   //移动范围
     public bool bMove;                                      //是否移动
     public bool bSelected;                                  //是否被选中
     public bool bStandby;                                   //是否待机
-    public int mID;                                         //对应地图块的idx
+    public int mIdx;                                        //对应地图块的idx
     public int attackRange;                                 //攻击范围
+    public bool isHero;  
 
     protected InputManager inputInstance;
     protected MainManager mainInstance;
-    protected Animator mAnimator;
+    public Animator mAnimator;
 
     private Transform mTransform;
     private List<int> path = new List<int>();
     private List<int> close = new List<int>();
-    private int[] fourDic = new int[4];       //四个方位的node
+
+    //背包:武器道具分开统计
+    public List<ItemData> bagList = new List<ItemData>();
+    public List<WeaponData> weaponList = new List<WeaponData>();
+    public List<ItemData> itemList = new List<ItemData>();
     
 	// Use this for initialization
     void Awake()
@@ -36,11 +68,6 @@ public class Character : MonoBehaviour {
         mAnimator = mTransform.GetComponent<Animator>();
     }
 
-    public virtual void ShowMoveRange()
-    {
-        MoveManager.Instance().ShowMoveRange(this.transform.position, 3, 1);
-    }
-
     public virtual void HideMoveRange()
     {
         MoveManager.Instance().HideMoveRange();
@@ -48,14 +75,146 @@ public class Character : MonoBehaviour {
     }
 
     /// <summary>
+    /// 升级
+    /// </summary>
+    public virtual void LevelUp(int add = 1)
+    {
+        CareerManager career = CareerManager.Instance();
+        mLevel += add;
+        for (int i = 0; i < add; i++)
+        {
+            if (career.LevelUP(mCareer, "hp"))
+                tHp += 1;
+            if (career.LevelUP(mCareer, "power"))
+                mPower += 1;
+            if (career.LevelUP(mCareer, "skill"))
+                mSkill += 1;
+            if (career.LevelUP(mCareer, "speed"))
+                mSpeed += 1;
+            if (career.LevelUP(mCareer, "lucky"))
+                mLucky += 1;
+            if (career.LevelUP(mCareer, "pdefense"))
+                pDefense += 1;
+            if (career.LevelUP(mCareer, "mdefense"))
+                mDefense += 1;
+        }      
+    }
+
+    #region 各种公有方法（武器、检查周围等）
+    /// <summary>
+    /// 设置当前装备的武器
+    /// </summary>
+    public virtual void SetCurWeapon()
+    {
+        if (weaponList.Count == 0)
+            return;
+        for (int i = 0; i < weaponList.Count; i++)
+        {
+            if (WeaponMatching(weaponList[i]))
+            {
+                curWeapon = weaponList[i];
+                return;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 更新武器，用于交换过后或者武器损坏
+    /// </summary>
+    public virtual void CurWeaponUpdate()
+    {
+        if (weaponList.Count == 0)
+            curWeapon = null;
+        else
+        {
+            //当前武器不为null，需要判断是否还存在这个武器,不存在就更新列表看看是否有匹配的武器
+            if (curWeapon != null)
+            {
+                bool have = false;
+                for (int i = 0; i < weaponList.Count; i++)
+                {
+                    if (weaponList[i].tag == curWeapon.tag)
+                        have = true;
+                }
+                if (have)
+                    return;
+                else
+                {
+                    for (int i = 0; i < weaponList.Count; i++)
+                    {
+                        if (WeaponMatching(weaponList[i]))
+                        {
+                            curWeapon = weaponList[i];
+                            return;
+                        }
+                    }
+                    curWeapon = null;
+                }
+            }
+            //当前武器为null则直接更新列表看看是否有匹配的武器
+            else
+            {
+                for (int i = 0; i < weaponList.Count; i++)
+                {
+                    if (WeaponMatching(weaponList[i]))
+                    {
+                        curWeapon = weaponList[i];
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 判断能否装备这个武器
+    /// </summary>
+    public virtual bool WeaponMatching(WeaponData weapon)
+    {
+        string weapon1 = CareerManager.Instance().keyCareerDic[mCareer].weaponkey1;
+        string weapon2 = CareerManager.Instance().keyCareerDic[mCareer].weaponkey2;
+        if (weapon.key == weapon1 || weapon.key == weapon2)
+            return true;
+        else
+            return false;
+    }
+
+    public virtual bool WeaponMatching(string tag)
+    {
+        int idx = -1;
+        for (int i = 0; i < weaponList.Count; i++)
+        {
+            if (weaponList[i].tag == tag)
+            {
+                idx = i;
+                break;
+            }
+        }
+        if (idx == -1)
+            return false;
+        WeaponData weapon = weaponList[idx];
+        string weapon1 = CareerManager.Instance().keyCareerDic[mCareer].weaponkey1;
+        string weapon2 = CareerManager.Instance().keyCareerDic[mCareer].weaponkey2;
+        if (weapon.key == weapon1 || weapon.key == weapon2)
+            return true;
+        else
+            return false;
+    }
+
+    /// <summary>
     /// 检测周围的块中是否有hero
     /// </summary>
     public virtual int CheckIsHeroAround()
     {
-        if (mainInstance.GetMapNode(mID + 1).locatedHero)
-        {
-            return (mID + 1);
-        }
+        int col = mainInstance.GetXNode();
+        if (mainInstance.IsInMap(mIdx + 1) && mainInstance.GetMapNode(mIdx + 1).locatedHero)
+            return (mIdx + 1);
+        else if (mainInstance.IsInMap(mIdx + col) && mainInstance.GetMapNode(mIdx + col).locatedHero)
+            return (mIdx + col);
+        else if (mainInstance.IsInMap(mIdx - 1) && mainInstance.GetMapNode(mIdx - 1).locatedHero)
+            return (mIdx - 1);
+        else if (mainInstance.IsInMap(mIdx - col) && mainInstance.GetMapNode(mIdx - col).locatedHero)
+            return (mIdx - col);
         else
             return -1;
     }
@@ -66,16 +225,105 @@ public class Character : MonoBehaviour {
     public virtual int CheckIsEnemyAround()
     {
         int col = mainInstance.GetXNode();
-        if (mainInstance.IsInMap(mID + 1) && mainInstance.GetMapNode(mID + 1).locatedEnemy)
-            return (mID + 1);
-        else if (mainInstance.IsInMap(mID + col) && mainInstance.GetMapNode(mID + col).locatedEnemy)
-            return (mID + col);
-        else if (mainInstance.IsInMap(mID - 1) && mainInstance.GetMapNode(mID - 1).locatedEnemy)
-            return (mID - 1);
-        else if (mainInstance.IsInMap(mID - col) && mainInstance.GetMapNode(mID - col).locatedEnemy)
-            return (mID - col);
+        if (mainInstance.IsInMap(mIdx + 1) && mainInstance.GetMapNode(mIdx + 1).locatedEnemy)
+            return (mIdx + 1);
+        else if (mainInstance.IsInMap(mIdx + col) && mainInstance.GetMapNode(mIdx + col).locatedEnemy)
+            return (mIdx + col);
+        else if (mainInstance.IsInMap(mIdx - 1) && mainInstance.GetMapNode(mIdx - 1).locatedEnemy)
+            return (mIdx - 1);
+        else if (mainInstance.IsInMap(mIdx - col) && mainInstance.GetMapNode(mIdx - col).locatedEnemy)
+            return (mIdx - col);
         return -1;
     }
+
+    /// <summary>
+    /// 检查周围是否有crack
+    /// </summary>
+    public virtual bool CheckIsCrackAround()
+    {
+        int col = mainInstance.GetXNode();
+        if (mainInstance.IsInMap(mIdx + 1) && mainInstance.GetMapNode(mIdx + 1).TileType == "Crack")
+        {
+            if (mainInstance.GetMapNode(mIdx + 1).mLife != 0)
+                return true;
+            else
+                return false;
+        }
+        else if (mainInstance.IsInMap(mIdx + col) && mainInstance.GetMapNode(mIdx + col).TileType == "Crack")
+        {
+            if (mainInstance.GetMapNode(mIdx + col).mLife != 0)
+                return true;
+            else
+                return false;
+        }
+        else if (mainInstance.IsInMap(mIdx - 1) && mainInstance.GetMapNode(mIdx - 1).TileType == "Crack")
+        {
+            if (mainInstance.GetMapNode(mIdx - 1).mLife != 0)
+                return true;
+            else
+                return false;
+        }
+        else if (mainInstance.IsInMap(mIdx - col) && mainInstance.GetMapNode(mIdx - col).TileType == "Crack")
+        {
+            if (mainInstance.GetMapNode(mIdx - col).mLife != 0)
+                return true;
+            else
+                return false;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 检测攻击范围内的敌人:根据攻击type
+    /// </summary>
+    public List<int> CheckEnemy()
+    {
+        //范围一
+        List<int> enemy = new List<int>();
+        int col = mainInstance.GetXNode();
+        if (mainInstance.IsInMap(mIdx + 1) && mainInstance.GetMapNode(mIdx + 1).locatedEnemy)
+            enemy.Add(mIdx + 1);
+        if (mainInstance.IsInMap(mIdx + col) && mainInstance.GetMapNode(mIdx + col).locatedEnemy)
+            enemy.Add(mIdx + col);
+        if (mainInstance.IsInMap(mIdx - 1) && mainInstance.GetMapNode(mIdx - 1).locatedEnemy)
+            enemy.Add(mIdx - 1);
+        if (mainInstance.IsInMap(mIdx - col) && mainInstance.GetMapNode(mIdx - col).locatedEnemy)
+            enemy.Add(mIdx - col);
+        return enemy;
+    }
+
+    public List<int> CheckCrack()
+    {
+        //范围一
+        List<int> crack = new List<int>();
+        int col = mainInstance.GetXNode();
+        if (mainInstance.IsInMap(mIdx + 1) && mainInstance.GetMapNode(mIdx + 1).TileType == "Crack")
+            crack.Add(mIdx + 1);
+        if (mainInstance.IsInMap(mIdx + col) && mainInstance.GetMapNode(mIdx + col).TileType == "Crack")
+            crack.Add(mIdx + col);
+        if (mainInstance.IsInMap(mIdx - 1) && mainInstance.GetMapNode(mIdx - 1).TileType == "Crack")
+            crack.Add(mIdx - 1);
+        if (mainInstance.IsInMap(mIdx - col) && mainInstance.GetMapNode(mIdx - col).TileType == "Crack")
+            crack.Add(mIdx - col);
+        return crack;
+    }
+
+    public List<int> CheckHero()
+    {
+        //范围一
+        List<int> hero = new List<int>();
+        int col = mainInstance.GetXNode();
+        if (mainInstance.IsInMap(mIdx + 1) && mainInstance.GetMapNode(mIdx + 1).locatedHero)
+            hero.Add(mIdx + 1);
+        if (mainInstance.IsInMap(mIdx + col) && mainInstance.GetMapNode(mIdx + col).locatedHero)
+            hero.Add(mIdx + col);
+        if (mainInstance.IsInMap(mIdx - 1) && mainInstance.GetMapNode(mIdx - 1).locatedHero)
+            hero.Add(mIdx - 1);
+        if (mainInstance.IsInMap(mIdx - col) && mainInstance.GetMapNode(mIdx - col).locatedHero)
+            hero.Add(mIdx - col);
+        return hero;
+    }
+    #endregion
 
     #region 人物移动
     public virtual void Move()
@@ -89,7 +337,7 @@ public class Character : MonoBehaviour {
         }
         else
         {
-            mID = to.GetID();
+            mIdx = to.GetID();
             mTransform.position = to.transform.position;
             //Index = path[path.Count - 1].ID;  //记录当前idx
             path.RemoveAt(path.Count - 1);
@@ -159,7 +407,7 @@ public class Character : MonoBehaviour {
         if (!mainInstance.GetMapNode(to).canMove)
             return;
         //原地
-        if (to == mID)
+        if (to == mIdx)
         {
             HideMoveRange();
             MoveDone();
@@ -189,14 +437,14 @@ public class Character : MonoBehaviour {
         if (!to.canMove)
             return;
         //原地
-        if (to.GetID() == mID)
+        if (to.GetID() == mIdx)
         {
             HideMoveRange();
             MoveDone();
             return;
         }
 
-        int from = mainInstance.Pos2Idx(this.transform.position);
+        //int from = mainInstance.Pos2Idx(this.transform.position);
         //DoAStar(from, to.GetID());  //所有的移动路径存在colse中
         path.Clear();
         //int parentIdx = close[close.Count - 1];
@@ -204,7 +452,6 @@ public class Character : MonoBehaviour {
         while (to.parentMapNode != null)  //通过父节点计算路径存于path中
         {
             path.Add(to.GetID());
-            Debug.Log(to.GetID());
             to = to.parentMapNode;
         }
         close.Clear();
@@ -212,91 +459,6 @@ public class Character : MonoBehaviour {
             return;
         moveDir = mainInstance.GetMapNode(path[path.Count - 1]).transform.position - mTransform.position; //初始化方向
         bMove = true;
-    }
-
-    public void DoAStar(int from, int to)
-    {
-        path.Add(from);
-        int col = mainInstance.GetXNode();
-        while (path.Count != 0)
-        {
-            float min = Mathf.Infinity;
-            int minPathIndex = 0;       //最小值在path的index
-            int minIndex = 0;           //最小值的index
-            //取path中fn值最小的节点
-            for (int i = 0; i < path.Count; i++)
-            {
-                int fn = DoFn(path[i], from, to);
-                if (fn < min)
-                {
-                    minPathIndex = i;
-                    min = fn;
-                }
-            }
-            minIndex = path[minPathIndex];
-            //放入close列表
-            close.Add(path[minPathIndex]);
-
-            //如果minIndex是目标节点则break
-            if (close[close.Count - 1] == to)
-                break;
-            else
-            {
-                //右
-                if (mainInstance.IsInMap(minIndex + 1) && mainInstance.GetMapNode(minIndex + 1).bVisited && (minIndex + 1) / col == minIndex / col)
-                    fourDic[0] = minIndex + 1;
-                else
-                    fourDic[0] = -1;
-                //下
-                if (mainInstance.IsInMap(minIndex - col) && mainInstance.GetMapNode(minIndex - col).bVisited)
-                    fourDic[1] = minIndex - col;
-                else
-                    fourDic[1] = -1;
-                //左
-                if (mainInstance.IsInMap(minIndex - 1) && mainInstance.GetMapNode(minIndex - 1).bVisited && (minIndex - 1) / col == minIndex / col)
-                    fourDic[2] = minIndex - 1;
-                else
-                    fourDic[2] = -1;
-                //上
-                if (mainInstance.IsInMap(minIndex + col) && mainInstance.GetMapNode(minIndex + col).bVisited)
-                    fourDic[3] = minIndex + col;
-                else
-                    fourDic[3] = -1;
-
-                for (int i = 0; i < 4; i++)
-                {
-                    if (!path.Contains(fourDic[i]) && !close.Contains(fourDic[i]) && fourDic[i] != -1)
-                    {
-                        //不在path列表里 且不在 close列表里
-                        int idx = fourDic[i];
-                        int pidx = path[minPathIndex];
-                        mainInstance.GetMapNode(idx).parentMapNode = mainInstance.GetMapNode(pidx);
-                        mainInstance.GetMapNode(idx).bVisited = true;
-                        path.Add(fourDic[i]);
-                    }
-                }
-            }
-            path.RemoveAt(minPathIndex);
-        }
-    }
-
-    private int DoFn(int index, int from, int to)
-    {
-        //计算gn
-        int col = mainInstance.GetXNode();
-        int a = Mathf.Abs(index - from);
-        int gn;
-        if (a / col == 0 || a % col == 0)
-            gn = Mathf.Abs(a / col - a % col) * 10;
-        else
-            gn = a / col * 14 + Mathf.Abs(a / col - a % col) * 10;
-
-        //计算hn
-        int hnX = Mathf.Abs(to / col - index / col);      //计算目标点距离当前点的单元格
-        int hnY = Mathf.Abs(to % col - index % col);
-        int hn = (hnX + hnY) * 10;
-
-        return (gn + hn);
     }
     #endregion
 
@@ -320,15 +482,93 @@ public class Character : MonoBehaviour {
     }
 
     /// <summary>
-    /// 攻击
+    /// 设置动画s
     /// </summary>
-    public virtual void Attack(int to)
+    public void SetAnimator(string name, bool b)
     {
-
+        mAnimator.SetBool(name, b);
     }
 
-    public virtual void AttackDown()
+    /// <summary>
+    /// 增加物品,默认添加到背包
+    /// </summary>
+    public virtual void AddItem(ItemData item, bool bag = true)
     {
-        Standby();
+        if (bagList.Count < BAGLIMIT)
+        {
+            if (bag)
+                bagList.Add(item);
+            itemList.Add(item);
+        }
+    }
+
+    public virtual void AddItem(WeaponData item, bool bag = true)
+    {
+        if (bagList.Count < BAGLIMIT)
+        {
+            if (bag)
+                bagList.Add(item);
+            weaponList.Add(item);
+        }
+    }
+
+    /// <summary>
+    /// 销毁item,默认清理背包中的
+    /// </summary>
+    public virtual void GiveUpItem(string tag, bool bag = true)
+    {
+        if(bag)
+        {
+            for (int i = 0; i < bagList.Count; i++)
+            {
+                if (tag == bagList[i].tag)
+                    bagList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < weaponList.Count; i++)
+        {
+            if (tag == weaponList[i].tag)
+            {
+                weaponList.RemoveAt(i);
+                if (curWeapon != null)
+                {
+                    if (tag == curWeapon.tag)
+                        UpdateCurWeapon();
+                }
+                return;
+            }
+        }
+        for (int i = 0; i < itemList.Count; i++)
+        {
+            if (tag == itemList[i].tag)
+            {
+                itemList.RemoveAt(i);
+                return;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 更新当前武器
+    /// </summary>
+    public void UpdateCurWeapon()
+    {
+        Debug.Log("更新当前武器");
+        if (weaponList.Count == 0)
+            curWeapon = null;
+        else
+        {
+            for (int i = 0; i < weaponList.Count; i++)
+            {
+                if (WeaponMatching(weaponList[i]))
+                {
+                    curWeapon = weaponList[i];
+                    ItemData item = bagList[0];
+                    bagList[0] = curWeapon;
+                    bagList.Add(item);
+                    return;
+                }
+            }
+        }
     }
 }

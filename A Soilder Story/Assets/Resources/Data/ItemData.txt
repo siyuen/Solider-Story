@@ -1,0 +1,1 @@
+{"0":{"id ":"0","name":"伤药","money":"300","durability":"3","tips":"HP恢复","sprite":"Sprites/Item/shangyao","功能":"HP恢复10点，每个伤药可使用3次","tag":"","":""}}

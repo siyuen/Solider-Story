@@ -71,28 +71,28 @@ namespace UIFramework
             {
                 //完全透明，不能穿透
                 case UIFormLucenyType.Lucency:
-                    print("完全透明");
+                    //print("完全透明");
                     _GoMaskPanel.SetActive(true);
                     Color newColor1 = new Color(255 / 255F, 255 / 255F, 255 / 255F, 0F / 255F);
                     _GoMaskPanel.GetComponent<Image>().color = newColor1;
                     break;
                 //半透明，不能穿透
                 case UIFormLucenyType.Translucence:
-                    print("半透明");
+                    //print("半透明");
                     _GoMaskPanel.SetActive(true);
                     Color newColor2 = new Color(220 / 255F, 220 / 255F, 220 / 255F, 50 / 255F);
                     _GoMaskPanel.GetComponent<Image>().color = newColor2;
                     break;
                 //低透明，不能穿透
                 case UIFormLucenyType.ImPenetrable:
-                    print("低透明");
+                    //print("低透明");
                     _GoMaskPanel.SetActive(true);
                     Color newColor3 = new Color(50 / 255F, 50 / 255F, 50 / 255F, 200F / 255F);
                     _GoMaskPanel.GetComponent<Image>().color = newColor3;
                     break;
                 //可以穿透
                 case UIFormLucenyType.Pentrate:
-                    print("允许穿透");
+                    //print("允许穿透");
                     if (_GoMaskPanel.activeInHierarchy)
                     {
                         _GoMaskPanel.SetActive(false);
@@ -109,7 +109,7 @@ namespace UIFramework
             //增加当前UI摄像机的层深（保证当前摄像机为最前显示）
             if (_UICamera != null)
             {
-                _UICamera.depth = _UICamera.depth + 100;    //增加层深
+                _UICamera.depth = 50;    //增加层深
             }
         }
 

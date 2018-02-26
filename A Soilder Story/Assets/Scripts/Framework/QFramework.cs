@@ -69,11 +69,11 @@ namespace QFramework
                         instanceGO = new GameObject(instanceName);
                     instance = instanceGO.AddComponent<T>();
                     DontDestroyOnLoad(instanceGO);  //保证实例不会被释放
-                    Debug.Log("Add New Singleton " + instance.name + " in Game!");
+                    //Debug.Log("Add New Singleton " + instance.name + " in Game!");
                 }
                 else
                 {
-                    Debug.Log("Already exist: " + instance.name);
+                    //Debug.Log("Already exist: " + instance.name);
                 }
             }
 

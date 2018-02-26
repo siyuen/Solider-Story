@@ -7,10 +7,21 @@ using Tiled2Unity;
 
 public class MainManager : QMonoSingleton<MainManager>
 {
-    public static Vector2 PIVOT = new Vector2(8, -8);
+    public enum MainState
+    {
+        Normal,       //正常
+        UseItem,      //使用道具
+        CheckLand,    //检查地形
+        AttackLand,   //攻击地形
+        NormalAttack, //攻击
+    }
+    //是否开始游戏，用于检验目标
+    public bool gameDoing;
 
+    public static Vector2 PIVOT = new Vector2(8, -8);
     public HeroController curHero;  //当前选择的hero
     public EnemyController curEnemy;  //当前选择的enemy
+    public MapNode curNode;
     public HeroController curMouseHero;  //当前光标处的hero
     public EnemyController curMouseEnemy;  //光标处的enemy
 
@@ -20,24 +31,42 @@ public class MainManager : QMonoSingleton<MainManager>
     private TiledMap map;
     private int mapXNode;  //map横轴有多少个node
     private int mapYNode;  //map纵轴有多少个node
-    private int nodeWidth;  //node的宽高
-    private int nodeHeight;
+    public int nodeWidth;  //node的宽高
+    public int nodeHeight;
+    //当前回合
+    public bool heroRound;
+    public MainState mainState;
 
-
-    void Awake()
+    public void Init()
     {
-        LevelManager.Instance().SetLevel(1);  //测试用
-        HeroManager.Instance().Init(1);
-        EnemyManager.Instance().Init(1);
-
+        Debug.Log("开始游戏");
+        gameDoing = true;
+        SetMapData();
+        HeroManager.Instance().Init();
+        EnemyManager.Instance().Init();
         //初始化英雄回合
         SetHeroRound();
         //初始化光标
         InitMouseCursor();
-        //注册事件
-        RegisterKeyBoardEvent();
         CursorUpdate();
         UpdateUIPos();
+        mainState = MainState.Normal;
+    }
+
+    public void Clear()
+    {
+        curHero = null;
+        curEnemy = null;
+        curMouseHero = null;
+        curMouseEnemy = null;
+        if (GameManager.Instance().gameState == GameManager.GameState.Fail)
+            HeroManager.Instance().HeroClear();
+        else if (GameManager.Instance().gameState == GameManager.GameState.Success)
+            HeroManager.Instance().SaveHeroClear();
+        EnemyManager.Instance().EnemyClear();
+        HideAllUI();
+        UnRegisterKeyBoradEvent();
+        ResourcesMgr.Instance().PushPool(mouseCursor, MainProperty.NORMALCURSOR_PATH);
     }
 
     /// <summary>
@@ -45,9 +74,8 @@ public class MainManager : QMonoSingleton<MainManager>
     /// </summary>
     private void InitMouseCursor()
     {
-        GameObject prefab = ResourcesMgr.Instance().LoadResource<GameObject>(MainProperty.NORMALCURSOR_PATH, true);
-        mouseCursor = Instantiate<GameObject>(prefab);
-        cursorIdx = HeroManager.Instance().GetHero(0).mID;
+        mouseCursor = ResourcesMgr.Instance().GetPool(MainProperty.NORMALCURSOR_PATH);
+        cursorIdx = HeroManager.Instance().GetHero(0).mIdx;
         mouseCursor.transform.position = Idx2Pos(cursorIdx);
         cursorAnimator = mouseCursor.GetComponent<Animator>();
     }
@@ -55,13 +83,36 @@ public class MainManager : QMonoSingleton<MainManager>
     /// <summary>
     /// 设置地图信息
     /// </summary>
-    public void SetMapData(TiledMap map)
+    public void SetMapData()
     {
-        this.map = map;
+        this.map = LevelManager.Instance().curMap.GetComponent<TiledMap>();
         mapXNode = map.NumTilesWide;
         mapYNode = map.NumTilesHigh;
         nodeWidth = map.TileWidth;
         nodeHeight = map.TileHeight;
+    }
+
+    public void TemporarySave()
+    {
+        UnRegisterKeyBoradEvent();
+        HideAllUI();
+        ResourcesMgr.Instance().PushPool(mouseCursor, MainProperty.NORMALCURSOR_PATH);
+        HeroManager.Instance().TemporarySave();
+        EnemyManager.Instance().TemporarySave();
+    }
+
+    public void ContinueGame()
+    {
+        SetMapData();
+        HeroManager.Instance().Continue();
+        EnemyManager.Instance().Continue();
+        RegisterKeyBoardEvent();
+        ShowAllUI();
+        InitMouseCursor();
+        CursorUpdate();
+        UpdateUIPos();
+        mainState = MainState.Normal;
+        heroRound = true;
     }
 
     #region 回合设定
@@ -70,13 +121,27 @@ public class MainManager : QMonoSingleton<MainManager>
     /// </summary>
     public void SetHeroRound()
     {
+        UIManager.Instance().CloseUIForms("Round");
         Debug.Log("heroRound");
+        heroRound = true;
         HeroManager.Instance().SetHeroRound();
         EnemyManager.Instance().SetEnemyInit();
+        HeroManager.Instance().CheckLand();
+    }
+
+    /// <summary>
+    /// 检查地形结束
+    /// </summary>
+    public void CheckEnd()
+    {
+        curHero = null;
+        curEnemy = null;
+        mainState = MainManager.MainState.Normal;
         RegisterKeyBoardEvent();
         if (mouseCursor)
         {
             mouseCursor.SetActive(true);
+            SetCursorPos(HeroManager.Instance().GetHero(0).mIdx);
             CursorUpdate();
         }
         ShowAllUI();
@@ -87,12 +152,12 @@ public class MainManager : QMonoSingleton<MainManager>
     /// </summary>
     public void SetEnemyRound()
     {
+        UIManager.Instance().CloseUIForms("Round");
         Debug.Log("enemyRound");
+        heroRound = false;
         EnemyManager.Instance().SetEnemyRounnd();
-        UnRegisterKeyBoradEvent();
-        if (mouseCursor)
-            mouseCursor.SetActive(false);
         HideAllUI();
+        HeroManager.Instance().SetHeroRound();
     }
     #endregion
 
@@ -266,15 +331,15 @@ public class MainManager : QMonoSingleton<MainManager>
             {
                 if (!node.locatedHero)
                 {
-                    GetMapNode(curHero.mID).locatedHero = null;
+                    GetMapNode(curHero.mIdx).locatedHero = null;
                     node.locatedHero = curHero;
                     curHero.MoveTo(node.GetID());
                 }
                 else
                 {
-                    if (node.GetID() != curHero.mID)
+                    if (node.GetID() != curHero.mIdx)
                         return;
-                    GetMapNode(curHero.mID).locatedHero = null;
+                    GetMapNode(curHero.mIdx).locatedHero = null;
                     node.locatedHero = curHero;
                     curHero.MoveTo(node.GetID());
                 }
@@ -412,6 +477,7 @@ public class MainManager : QMonoSingleton<MainManager>
         input.RegisterKeyDownEvent(TurnRight, EventType.KEY_RIGHTARROW);
         input.RegisterKeyDownEvent(TurnConfirm, EventType.KEY_Z);
         input.RegisterKeyDownEvent(TurnCancel, EventType.KEY_X);
+        input.RegisterKeyDownEvent(TurnRT, EventType.KEY_S);
     }
 
     /// <summary>
@@ -426,6 +492,7 @@ public class MainManager : QMonoSingleton<MainManager>
         input.UnRegisterKeyDownEvent(TurnRight, EventType.KEY_RIGHTARROW);
         input.UnRegisterKeyDownEvent(TurnConfirm, EventType.KEY_Z);
         input.UnRegisterKeyDownEvent(TurnCancel, EventType.KEY_X);
+        input.UnRegisterKeyDownEvent(TurnRT, EventType.KEY_S);
     }
 
     /// <summary>
@@ -509,47 +576,53 @@ public class MainManager : QMonoSingleton<MainManager>
     /// </summary>
     private void TurnConfirm()
     {
+        //1.null 2.选择hero 3.选择enemy
         //判断当前是否有选择hero
-        if (!curHero)
+        if (!curHero && !curEnemy)
         {
             if (GetMapNode(cursorIdx).locatedHero)
             {
                 HeroController hero = GetMapNode(cursorIdx).locatedHero;
-                curHero = hero;
                 hero.Selected();
             }
-        }
-        else
-        {
-            MapNode node = GetMapNode(cursorIdx);
-            //如果点击的块在移动范围内且没有其他人物则可以移动
-            if (node.bVisited && !node.locatedEnemy && !node.locatedHero)
-            {
-                node.locatedHero = curHero;  
-                curHero.MoveTo(node.GetID());
-            }
-            //是否点击当前hero
-            if (node.locatedHero == curHero)
-            {
-                node.locatedHero = curHero;
-                curHero.MoveTo(node.GetID());
-            }
-        }      
-        //判断当前是否有选择enemy
-        if (!curEnemy)
-        {
-            if (GetMapNode(cursorIdx).locatedEnemy)
+            else if (GetMapNode(cursorIdx).locatedEnemy)
             {
                 EnemyController enemy = GetMapNode(cursorIdx).locatedEnemy;
                 curEnemy = enemy;
                 enemy.Selected();
             }
+            else
+            {
+                UnRegisterKeyBoradEvent();
+                HideAllUI();
+                UIManager.Instance().ShowUIForms("GameOption");
+            }
         }
-        else
+        else if (curHero)
+        {
+            MapNode node = GetMapNode(cursorIdx);
+            //如果点击的块在移动范围内且没有其他人物则可以移动
+            if (node.bVisited && !node.locatedEnemy && !node.locatedHero)
+            {
+                UnRegisterKeyBoradEvent();
+                SetCursorActive(false);
+                node.locatedHero = curHero;
+                curHero.MoveTo(node.GetID());
+            }
+            //是否点击当前hero
+            else if (node.locatedHero == curHero)
+            {
+                UnRegisterKeyBoradEvent();
+                SetCursorActive(false);
+                node.locatedHero = curHero;
+                curHero.MoveTo(node.GetID());
+            }
+        }
+        else if(curEnemy)
         {
             curEnemy.CancelSelected();
             curEnemy = null;
-        }
+        }      
     }
 
     /// <summary>
@@ -560,8 +633,8 @@ public class MainManager : QMonoSingleton<MainManager>
         if (curHero)
         {
             curHero.CancelSelected();
-            GetMapNode(curHero.mID).locatedHero = curHero;
-            SetCursorPos(curHero.mID);
+            GetMapNode(curHero.mIdx).locatedHero = curHero;
+            SetCursorPos(curHero.mIdx);
             curHero = null;
             CursorUpdate();
             UpdateUIPos();
@@ -571,6 +644,18 @@ public class MainManager : QMonoSingleton<MainManager>
             curEnemy.CancelSelected();
             curEnemy = null;
         }
+    }
+
+    /// <summary>
+    /// 显示信息
+    /// </summary>
+    private void TurnRT()
+    {
+        if (!curMouseHero && !curMouseEnemy)
+            return;
+        UnRegisterKeyBoradEvent();
+        HideAllUI();
+        UIManager.Instance().ShowUIForms("RoleData");
     }
 
     /// <summary>
@@ -659,6 +744,9 @@ public class MainManager : QMonoSingleton<MainManager>
         return pos;
     }
 
+    /// <summary>
+    /// 根据idx计算pos,锚点为左上角
+    /// </summary>
     public Vector3 Idx2Pos2(int idx)
     {
         int x = idx % mapXNode;
@@ -668,13 +756,16 @@ public class MainManager : QMonoSingleton<MainManager>
     }
 
     /// <summary>
-    /// 获取几行几列
+    /// 获取几行
     /// </summary>
     public int GetXNode()
     {
         return mapXNode;
     }
 
+    /// <summary>
+    /// 获取几列
+    /// </summary>
     public int GetYNode()
     {
         return mapYNode;
@@ -688,6 +779,19 @@ public class MainManager : QMonoSingleton<MainManager>
         int x = idx % mapXNode;
         int y = idx / mapXNode;
         return new Vector2(x, y);
+    }
+
+    /// <summary>
+    /// 两个idx的距离
+    /// </summary>
+    public int Idx2IdxDis(int i1, int i2)
+    {
+        int dis = 0;
+        Vector2 pos1 = Idx2ListPos(i1);
+        Vector2 pos2 = Idx2ListPos(i2);
+        dis = (int)(Mathf.Abs(pos1.x - pos2.x) + Mathf.Abs(pos1.y - pos2.y));
+
+        return dis;
     }
 
     /// <summary>
@@ -754,6 +858,19 @@ public class MainManager : QMonoSingleton<MainManager>
                 return 4;
         }
     }
+
+    /// <summary>
+    /// 人物信息页切换当前人物
+    /// </summary>
+    public void SetMouseRole(int id)
+    {
+        if (curMouseHero)
+        {
+            curMouseHero = HeroManager.Instance().liveHeroList[id];
+            SetCursorPos(curMouseHero.mIdx);
+        }
+    }
+
 
     #endregion
 

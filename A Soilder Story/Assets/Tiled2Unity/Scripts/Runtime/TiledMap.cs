@@ -9,6 +9,9 @@ namespace Tiled2Unity
 {
     public class TiledMap : MonoBehaviour
     {
+        //显示隐藏的
+        public GameObject secondLand;
+
         public enum MapOrientation
         {
             Orthogonal,
@@ -102,6 +105,11 @@ namespace Tiled2Unity
             Gizmos.DrawLine(topRight, bottomRight);
             Gizmos.DrawLine(bottomRight, bottomLeft);
             Gizmos.DrawLine(bottomLeft, topLeft);
+        }
+
+        public void SetSecondLand(bool b)
+        {
+            secondLand.SetActive(b);
         }
     }
 }

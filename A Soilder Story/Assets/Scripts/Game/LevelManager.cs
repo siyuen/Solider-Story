@@ -5,41 +5,31 @@ using QFramework;
 using UIFramework;
 using Tiled2Unity;
 
-public class LevelManager : QMonoSingleton<LevelManager> {
+public class LevelManager : QSingleton<LevelManager> {
     public const string MAP_PATH = "Prefabs/Game/Map/Level_";
     public const int LEVEL_LIMIT = 10;
-    
-    struct NodeData
+    public const int NULLNODE = 100;
+    public const string ALLENEMY = "allenemy";
+    public const string POS = "pos";
+    //当前LevelMap
+    public GameObject curMap;  
+    //关卡信息
+    public Dictionary<string, LevelData> levelDic;
+    //当前Level
+    private int curLevel;     
+    private List<MapNode> mapNodeList;
+
+    private LevelManager()
     {
-        public NodeData(int value, int moveValue)
-        {
-            Value = value;
-            MoveValue = moveValue;
-        }
-        public int Value;
-        public int MoveValue;
-    }
-    private int curLevel;     //当前Level
-    private GameObject curMap;  //当前LevelMap
-    private Dictionary<string, NodeData> mapNodeValueDic = new Dictionary<string, NodeData>(); //地图相应图块的数据
-    
-    void Awake()
-    {
-        curLevel = 1;
-        InitNodeData();
-        MainManager.Instance();
-        UIManager.Instance();
+        levelDic = DataManager.Load<LevelData>("Data/LevelData");
     }
 
-    private void InitNodeData()
+    public void Init(int level)
     {
-        mapNodeValueDic.Add("Grass", new NodeData(1, 1));
-        mapNodeValueDic.Add("Tree", new NodeData(1, 1));
-        mapNodeValueDic.Add("Mountain", new NodeData(3, 1));
-        mapNodeValueDic.Add("Wall", new NodeData(4, 1));
-        mapNodeValueDic.Add("Water", new NodeData(1, 1));
-        mapNodeValueDic.Add("Bridge", new NodeData(6, 1));
-        mapNodeValueDic.Add("Untag", new NodeData(7, 1));
+        if (level > levelDic.Count)
+            return;
+        curLevel = level;
+        UIManager.Instance().ShowUIForms("LevelStart");
     }
 
     public int GetCurLevel()
@@ -47,43 +37,101 @@ public class LevelManager : QMonoSingleton<LevelManager> {
         return curLevel;
     }
 
+    #region 地图相关
     /// <summary>
-    /// 设置关卡，初始化图块数据
+    /// 显示地图隐藏的部分
     /// </summary>
-    /// <param name="level"></param>
-    public void SetLevel(int level)
+    public void ShowMap()
     {
-        curLevel = level;
-        string path = MAP_PATH + level;
-        curMap = ResourcesMgr.Instance().LoadAsset(path, true);
-        TiledMap map = curMap.GetComponent<TiledMap>();
-        InitMapNode(map);
+        curMap.GetComponent<TiledMap>().SetSecondLand(true);
+    }
+
+    /// <summary>
+    /// 设置关卡，初始化图块数据,enemy
+    /// </summary>
+    public void SetLevel()
+    {
+        string path = MAP_PATH + curLevel;
+        curMap = ResourcesMgr.Instance().GetPool(path);
+        InitMapNode();
+    }
+
+    public void Clear()
+    {
+        string path = MAP_PATH + curLevel;
+        ResourcesMgr.Instance().PushPool(curMap, path);
     }
 
     /// <summary>
     /// 初始化图块数据，通过id排序存入list
     /// </summary>
-    private void InitMapNode(TiledMap map)
+    private void InitMapNode()
     {
+        TiledMap map = curMap.GetComponent<TiledMap>();
         MapNode[] tiles = curMap.GetComponentsInChildren<MapNode>();
         MapNode[] Tiles = new MapNode[tiles.Length];
         for (int i = 0; i < tiles.Length; i++)
         {
             Vector2 pos = tiles[i].transform.position;
             int id = (int)(pos.x / map.TileWidth + Mathf.Abs(pos.y / map.TileHeight) * map.NumTilesWide);
-            NodeData data;
-            mapNodeValueDic.TryGetValue(tiles[i].TileType, out data);
-            tiles[i].Init(id, data.Value, data.MoveValue);
+            tiles[i].Init(id);
             Tiles[id] = tiles[i];
         }
-        MainManager.Instance().SetMapData(map);
-        MoveManager.Instance().SetMap(new List<MapNode>(Tiles));
+        mapNodeList = new List<MapNode>(Tiles);
+        MoveManager.Instance().SetMap(mapNodeList);
     }
 
-    public int GetNodeID(Vector2 pos)
+    #endregion
+
+    /// <summary>
+    /// 中断隐藏
+    /// </summary>
+    public void TemporarySave()
     {
-        return 0;
+        string path = MAP_PATH + curLevel;
+        ResourcesMgr.Instance().PushPool(curMap, path);
+        MainManager.Instance().TemporarySave();
     }
 
+    public void ContinueGame(int level)
+    {
+        curLevel = level;
+        SetLevel();
+        MainManager.Instance().ContinueGame();
+    }
 
+    /// <summary>
+    /// 获取关卡目的tips
+    /// </summary>
+    public string GetLevelTips()
+    {
+        return levelDic[curLevel.ToString()].goaltips;
+    }
+
+    /// <summary>
+    /// 获取关卡目的t
+    /// </summary>
+    public string GetLevelGoal()
+    {
+        return levelDic[curLevel.ToString()].goal;
+    }
+
+    /// <summary>
+    /// 判断是否完成任务
+    /// </summary>
+    public bool IsFinish()
+    {
+        if (levelDic[curLevel.ToString()].goal == ALLENEMY)
+        {
+            if (EnemyManager.Instance().GetEnemyCount() == 0)
+                return true;
+        }
+        else if (levelDic[curLevel.ToString()].goal == POS)
+        {
+            HeroController hero = MainManager.Instance().curHero;
+            if (MainManager.Instance().GetMapNode(hero.mIdx).mName == "大门" && hero.mName == HeroManager.LEADER)
+                return true;
+        }
+        return false;
+    }
 }

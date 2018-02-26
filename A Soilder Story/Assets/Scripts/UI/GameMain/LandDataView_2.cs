@@ -30,7 +30,7 @@ public class LandDataView_2 : UIBase
 
     public override void Display()
     {
-        this.gameObject.SetActive(true);
+        base.Display();
         mTransform.position = hidePos;
         mTransform.DOMove(showPos, 0.5f);
     }
@@ -38,7 +38,7 @@ public class LandDataView_2 : UIBase
     public override void Hiding()
     {
         mTransform.DOMove(hidePos, 0.5f);
-        this.gameObject.SetActive(false);
+        base.Hiding();
     }
 
     /// <summary>
@@ -46,6 +46,14 @@ public class LandDataView_2 : UIBase
     /// </summary>
     public void UpdataData(MapNode node)
     {
-        nameText.text = node.TileType;
+        nameText.text = node.mName;
+        if (node.mdef == LevelManager.NULLNODE)
+            defText.text = "";
+        else
+            defText.text = node.mdef.ToString();
+        if (node.mAvo == LevelManager.NULLNODE)
+            avoText.text = "";
+        else
+            avoText.text = node.mAvo.ToString();
     }
 }

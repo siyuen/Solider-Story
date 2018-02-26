@@ -18,37 +18,46 @@ namespace QFramework
         /// 获取obj
         /// </summary>
         /// <returns></returns>
-        public List<GameObject> GetPool(string path, int length)
+        public GameObject GetPool(string name)
         {
-            if (objPool.ContainsKey(path))
+            GameObject obj;
+            if (objPool.ContainsKey(name) && objPool[name].Count > 0)
             {
-                if (objPool[path].Count >= length)
-                {
-                    return objPool[path];
-                }
-                else
-                {
-                    for (int i = 0; i < length - objPool[path].Count; i++)
-                    {
-                        GameObject obj = LoadAsset(path, true);
-                        objPool[path].Add(obj);
-                    }
-                    return objPool[path]; ;
-                }
+                obj = objPool[name][0];
+                objPool[name].RemoveAt(0);
+            }
+            else if (objPool.ContainsKey(name) && objPool[name].Count == 0)
+            {
+                obj = ResourcesMgr.Instance().LoadAsset(name, true);
             }
             else
             {
-                objPool[path] = new List<GameObject>();
-                for (int i = 0; i < length; i++)
-                {
-                    GameObject obj = LoadAsset(path, true);
-                    objPool[path].Add(obj);
-                }
-                return objPool[path];
+                obj = ResourcesMgr.Instance().LoadAsset(name, true);
+                objPool.Add(name, new List<GameObject>());
+            }
+            obj.SetActive(true);
+            return obj;
+        }
+
+        public void PushPool(GameObject obj, string name)
+        {
+            objPool[name].Add(obj);
+            obj.SetActive(false);
+        }
+
+        public void PushPool(List<GameObject> obj, string name)
+        {
+            for (int i = 0; i < obj.Count; i++)
+            {
+                obj[i].SetActive(false);
+                objPool[name].Add(obj[i]);
             }
         }
 
-
+        public Sprite LoadSprite(string path)
+        {
+            return Resources.Load<GameObject>(path).GetComponent<SpriteRenderer>().sprite;
+        }
         /// <summary>
         /// 调用资源（带对象缓冲技术）
         /// </summary>

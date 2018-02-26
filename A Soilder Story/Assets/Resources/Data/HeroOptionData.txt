@@ -1,0 +1,1 @@
+{"0":{"id":"0","key":"attack","name":"攻击","value":"0","":""},"1":{"id":"1","key":"occupy","name":"占领","value":"1","":""},"2":{"id":"2","key":"item","name":"物品","value":"2","":""},"3":{"id":"3","key":"change","name":"交换","value":"3","":""},"4":{"id":"4","key":"standby","name":"待机","value":"4","":""}}

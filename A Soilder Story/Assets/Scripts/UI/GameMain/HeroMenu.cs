@@ -3,48 +3,23 @@ using System.Collections.Generic;
 using UnityEngine;
 using UIFramework;
 using UnityEngine.UI;
+using QFramework;
 
 public class HeroMenu : UIBase
 {
     public MenuView menuView;
-
-    private HeroProperty.HeroOption heroOption;
-
-    //选项button
-
-    private struct OptionButton
-    {
-        public OptionButton(int i, GameObject b, HeroProperty.HeroOptions o, HeroProperty.normalFunc f, HeroProperty.normalFunc m)
-        {
-            idx = i;
-            btn = b;
-            option = o;
-            func = f;
-            mfunc = m;
-        }
-        public int idx;
-        public GameObject btn;
-        public HeroProperty.HeroOptions option;
-        //点击func
-        public HeroProperty.normalFunc func;
-        //移动到的func
-        public HeroProperty.normalFunc mfunc;
-    }
-
-    //存选项btn
-    private List<OptionButton> optionButton = new List<OptionButton>();
+    private List<GameObject> optionList = new List<GameObject>();
 
     void Awake()
     {
         CurrentUIType.UIForms_Type = UIFormType.Normal;
         CurrentUIType.UIForms_ShowMode = UIFormShowMode.Normal;
-        heroOption = HeroProperty.HeroOption.Instance();
     }
 
     public override void Display()
     {
-        Init();
         base.Display();
+        Init();
     }
 
     public override void Hiding()
@@ -55,23 +30,82 @@ public class HeroMenu : UIBase
 
     private void Init()
     {
-        //待机为默认
-        HeroProperty.HeroOptions option = HeroProperty.HeroOptions.Standby;
-        AddItem(option, Standby, MoveToAnother);
-        //检测敌人
-        int id = MainManager.Instance().curHero.CheckIsEnemyAround();
-        if (id != -1)
+        MainManager main = MainManager.Instance();
+        HeroController hero = main.curHero;
+        AddOption("待机");
+        if ((hero.CheckIsEnemyAround() != -1 && hero.curWeapon != null) || hero.CheckIsCrackAround())
+            AddOption("攻击");
+        if (hero.bagList.Count > 0)
+            AddOption("物品");
+        if (hero.mName == HeroManager.LEADER && main.GetMapNode(hero.mIdx).mName == "大门")
+            AddOption("占领");
+        if (hero.CheckIsHeroAround() != -1 && !hero.bChangeItem)
         {
-            option = HeroProperty.HeroOptions.Attack;
-            AddItem(option, Attack, MoveToAttack);
+            List<int> list = hero.CheckHero();
+            bool b = false;
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (main.GetMapNode(list[i]).locatedHero.bagList.Count != 0)
+                {
+                    b = true;
+                    break;
+                }
+            }
+            if (b)
+                AddOption("交换");
+            else
+            {
+                if(hero.bagList.Count > 0)
+                    AddOption("交换");
+            }
         }
-        //检测物品
-        option = HeroProperty.HeroOptions.Item;
-        AddItem(option, Item, MoveToAnother);
-        //排序添加进menuView
-        SortFunc();
+        //交换过的更新一下当前武器列表
+        if (hero.bChangeItem)
+             hero.CurWeaponUpdate();
+        AddInMenu();
+
         menuView.cancleFunc = OnCancle;
+        menuView.bAnim = true;
         menuView.DisplayInit();
+    }
+
+    private void AddOption(string name)
+    {
+        GameObject btn = ResourcesMgr.Instance().GetPool(MainProperty.BUTTON_PATH);
+        Text txt = btn.GetComponentInChildren<Text>();
+        txt.text = name;
+        if (name == "交换")
+            txt.color = ItemManager.COLOR_INSTALL;
+        else
+            txt.color = ItemManager.COLOR_USEITEM;
+        btn.name = name;
+        optionList.Add(btn);
+    }
+
+    private void AddInMenu()
+    {
+        for (int i = 0; i < optionList.Count - 1; i++)
+        {
+            for (int j = i + 1; j < optionList.Count; j++)
+            {
+                int value = DataManager.Value(HeroManager.Instance().keyOptionDic[optionList[i].name].value);
+                int value1 = DataManager.Value(HeroManager.Instance().keyOptionDic[optionList[j].name].value);
+                if (value > value1)
+                {
+                    GameObject btn = optionList[j];
+                    optionList[j] = optionList[i];
+                    optionList[i] = btn;
+                }
+            }
+        }
+        for (int i = 0; i < optionList.Count; i++)
+        {
+            string name = optionList[i].name;
+            if (name == "攻击")
+                menuView.AddItem(MainProperty.BUTTON_PATH, optionList[i], HeroManager.Instance().funcDic[name], HeroManager.Instance().MoveToAttack);
+            else
+                menuView.AddItem(MainProperty.BUTTON_PATH, optionList[i], HeroManager.Instance().funcDic[name], HeroManager.Instance().MoveToAnother);
+        }
     }
 
     /// <summary>
@@ -79,91 +113,14 @@ public class HeroMenu : UIBase
     /// </summary>
     private void Clear()
     {
-        optionButton.Clear();
-    }
-
-    /// <summary>
-    /// 添加选项进content
-    /// </summary>
-    private void AddItem(HeroProperty.HeroOptions option, HeroProperty.normalFunc func, HeroProperty.normalFunc m)
-    {
-        GameObject btn = GameObjectPool.Instance().GetPool(MainProperty.BUTTON_PATH, Vector3.zero);
-        //设置
-        Text txt = btn.GetComponentInChildren<Text>();
-        string str;
-        heroOption.option2Str.TryGetValue(option, out str);
-        txt.text = str;
-        btn.name = option.ToString();
-        optionButton.Add(new OptionButton(heroOption.optionValue[option], btn, option, func, m));
-    }
-
-    /// <summary>
-    /// 将optionButton排序
-    /// </summary>
-    private void SortFunc()
-    {
-        if (optionButton.Count == 0)
-            return;
-        for (int i = 0; i < optionButton.Count - 1; i++)
-        {
-            for (int j = i + 1; j < optionButton.Count; j++)
-            {
-                if (optionButton[i].idx > optionButton[j].idx)
-                {
-                    OptionButton option = optionButton[i];
-                    optionButton[i] = optionButton[j];
-                    optionButton[j] = option;
-                }
-            }
-        }
-        //添加到menu中
-        for(int i=0;i<optionButton.Count;i++)
-        {
-            menuView.AddItem(MainProperty.BUTTON_PATH, optionButton[i].btn, optionButton[i].func, optionButton[i].mfunc);
-        }
-    }
-
-    #region 选项功能
-    /// <summary>
-    /// 待机
-    /// </summary>
-    private void Standby()
-    {
         menuView.Hide();
-        MainManager.Instance().curHero.Standby();
-    }
-
-    private void Attack()
-    {
-        menuView.Hide();
-        UIManager.Instance().CloseUIForms("HeroMenu");
-        OpenUIForm("WeaponSelectMenu");
-    }
-
-    /// <summary>
-    /// 光标在attack选项时的显示
-    /// </summary>
-    private void MoveToAttack()
-    {
-        MoveManager.Instance().ShowAttackRange();
-    }
-
-    /// <summary>
-    /// 其它选项
-    /// </summary>
-    private void MoveToAnother()
-    {
-        MoveManager.Instance().HideAttackRange();
-    }
-
-    private void Item()
-    {
-        Debug.Log("物品");
+        optionList.Clear();
     }
 
     private void OnCancle()
     {
+        UIManager.Instance().CloseUIForms("HeroMenu");
         MainManager.Instance().curHero.CancelMoveDone();
+        MainManager.Instance().RegisterKeyBoardEvent();
     }
-    #endregion
 }

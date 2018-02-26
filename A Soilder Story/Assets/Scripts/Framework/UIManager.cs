@@ -27,7 +27,7 @@ namespace UIFramework
         //弹出节点
         private Transform _TraPopUp = null;
         //UI管理脚本的节点
-        private Transform _TraUIScripts = null;
+        //private Transform _TraUIScripts = null;
         //uiCamera
         private Camera uiCamera = null;
         //canvase的9个方位pos
@@ -67,17 +67,32 @@ namespace UIFramework
                 _DicFormsPaths.Add("HeroMenu", @"Prefabs\UI\Character\HeroMenu");
                 _DicFormsPaths.Add("CharacterData_1", @"Prefabs\UI\Character\CharacterData_1");
                 _DicFormsPaths.Add("CharacterData_2", @"Prefabs\UI\Character\CharacterData_2");
-                _DicFormsPaths.Add("LandData_1", @"Prefabs\UI\Terrain\LandData_1");
-                _DicFormsPaths.Add("LandData_2", @"Prefabs\UI\Terrain\LandData_2");
+                _DicFormsPaths.Add("LandData_1", @"Prefabs\UI\View\LandData_1");
+                _DicFormsPaths.Add("LandData_2", @"Prefabs\UI\View\LandData_2");
                 _DicFormsPaths.Add("GameGoal_1", @"Prefabs\UI\GameGoal_1");
                 _DicFormsPaths.Add("GameGoal_2", @"Prefabs\UI\GameGoal_2");
-                _DicFormsPaths.Add("WeaponSelectMenu", @"Prefabs\UI\View\WeaponSelectMenu");
+                _DicFormsPaths.Add("ItemMenu", @"Prefabs\UI\View\ItemMenu");
+                _DicFormsPaths.Add("UseOption", @"Prefabs\UI\View\UseOptionView");
                 _DicFormsPaths.Add("FightData", @"Prefabs\UI\Fight\FightData");
+                _DicFormsPaths.Add("FightMain", @"Prefabs\UI\Fight\FightMain");
+                _DicFormsPaths.Add("RoleData", @"Prefabs\UI\View\RoleData");
+                _DicFormsPaths.Add("GameOption", @"Prefabs\UI\View\GameOptionMenu");
+                _DicFormsPaths.Add("Login", @"Prefabs\UI\View\LoginView");
+                _DicFormsPaths.Add("StartOption", @"Prefabs\UI\View\StartOptionView");
+                _DicFormsPaths.Add("UseItem", @"Prefabs\UI\View\UseItemView");
+                _DicFormsPaths.Add("StartGame", @"Prefabs\UI\View\StartGameView");
+                _DicFormsPaths.Add("Round", @"Prefabs\UI\Round");
+                _DicFormsPaths.Add("LevelUp", @"Prefabs\UI\View\LevelUpView");
+                _DicFormsPaths.Add("GameOver", @"Prefabs\UI\View\GameOver");
+                _DicFormsPaths.Add("Story", @"Prefabs\UI\View\StoryView");
+                _DicFormsPaths.Add("LevelStart", @"Prefabs\UI\View\LevelStart");
+                _DicFormsPaths.Add("ChangeItem", @"Prefabs\UI\View\ChangeItem");
+                _DicFormsPaths.Add("FightLand", @"Prefabs\UI\Fight\FightLand");
             }
 
             //获取uiCamera
             uiCamera = UnityHelper.GetTheChildNodeComponetScripts<Camera>(m_Canvas.gameObject, "UICamera");
-            //设为800 * 600根据高度适配，没有找到怎么动态获取的？
+            //设为900 * 600根据高度适配，没有找到怎么动态获取的？
             float height = 600;
             float rate = m_Canvas.pixelRect.height / height;
             float width = m_Canvas.pixelRect.width / rate;

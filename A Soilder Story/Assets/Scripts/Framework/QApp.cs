@@ -31,19 +31,22 @@ public class QApp : QMonoSingleton<QApp>
     /// </summary>
     IEnumerator ApplicationDidFinishLaunching()
     {
-        yield return GameManager.Instance();
+        //yield return GameManager.Instance();
 
         // 进入测试逻辑
         if (QApp.Instance().mode == AppMode.Developing)
         {
             // 测试资源加载
-            //LevelManager.Instance().SetLevel(1);
+            UIManager.Instance().ShowUIForms("Login");
+            //UIManager.Instance().ShowUIForms("LevelUp");
             yield return null;
             // 进入正常游戏逻辑
         }
-        else
+        else if (QApp.Instance().mode == AppMode.QA)
         {
-            yield return GameManager.Instance();
+            //GameManager.Instance().StartGame(0);
+            DataManager.Instance().Test();
+            yield return null;
         }
         yield return null;
     }

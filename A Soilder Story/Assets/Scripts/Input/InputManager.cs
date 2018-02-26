@@ -37,6 +37,7 @@ public class InputManager : QMonoSingleton<InputManager> {
         eventTypeDic.Add(EventType.KEY_RIGHTARROW, keyDownEvent);
         eventTypeDic.Add(EventType.KEY_Z, keyDownEvent);
         eventTypeDic.Add(EventType.KEY_X, keyDownEvent);
+        eventTypeDic.Add(EventType.KEY_S, keyDownEvent);
     }
 
     void Start()
@@ -46,30 +47,29 @@ public class InputManager : QMonoSingleton<InputManager> {
 
 	// Update is called once per frame
 	void Update () {
-        if (GameManager.gameInstance.gameState == GameManager.GameState.Play)
+        if (inputType == 0)
         {
-            if (inputType == 0)
-            {
-                if (Input.GetKeyDown(KeyCode.Z))
-                    KeyZDown();
-                else if(Input.GetKeyDown(KeyCode.X))
-                    KeyXDown();
-                else if (Input.GetKeyDown(KeyCode.UpArrow))
-                    KeyUpDown();
-                else if (Input.GetKeyDown(KeyCode.DownArrow))
-                    KeyDownDown();
-                else if (Input.GetKeyDown(KeyCode.LeftArrow))
-                    KeyLeftDown();
-                else if (Input.GetKeyDown(KeyCode.RightArrow))
-                    KeyRightDown();
-            }
-            else
-            {
-                if (mousePos != Input.mousePosition)
-                    MouseMove();
-                if (Input.GetMouseButtonDown(0))
-                    MouseClick();
-            }
+            if (Input.GetKeyDown(KeyCode.Z))
+                KeyZDown();
+            else if (Input.GetKeyDown(KeyCode.X))
+                KeyXDown();
+            else if (Input.GetKeyDown(KeyCode.S))
+                KeySDown();
+            else if (Input.GetKeyDown(KeyCode.UpArrow))
+                KeyUpDown();
+            else if (Input.GetKeyDown(KeyCode.DownArrow))
+                KeyDownDown();
+            else if (Input.GetKeyDown(KeyCode.LeftArrow))
+                KeyLeftDown();
+            else if (Input.GetKeyDown(KeyCode.RightArrow))
+                KeyRightDown();
+        }
+        else
+        {
+            if (mousePos != Input.mousePosition)
+                MouseMove();
+            if (Input.GetMouseButtonDown(0))
+                MouseClick();
         }
 	}
 
@@ -83,6 +83,7 @@ public class InputManager : QMonoSingleton<InputManager> {
             return;
         if (!eventTypeDic.ContainsKey(type))
             return;
+
         keyBoardEventList.Add(type);
         eventTypeDic[type] += action;
     }
@@ -96,6 +97,7 @@ public class InputManager : QMonoSingleton<InputManager> {
             return;
         if (!eventTypeDic.ContainsKey(type))
             return;
+
         keyBoardEventList.Remove(type);
         eventTypeDic[type] -= action;
     }
@@ -110,6 +112,12 @@ public class InputManager : QMonoSingleton<InputManager> {
     {
         if (eventTypeDic[EventType.KEY_X] != null)
             eventTypeDic[EventType.KEY_X]();
+    }
+
+    protected void KeySDown()
+    {
+        if (eventTypeDic[EventType.KEY_S] != null)
+            eventTypeDic[EventType.KEY_S]();
     }
 
     protected void KeyUpDown()
