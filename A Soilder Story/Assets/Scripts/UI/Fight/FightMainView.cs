@@ -71,10 +71,11 @@ public class FightMainView : UIBase {
         curHero = MainManager.Instance().curHero;
         curEnemy = MainManager.Instance().curEnemy;
 
-        heroName.text = curHero.mName;
-        heroHpValue.text = curHero.cHp.ToString();
+        heroName.text = curHero.rolePro.mName;
+        heroHpValue.text = curHero.rolePro.cHp.ToString();
         if (curHero.curWeapon != null)
         {
+            heroWeaponImg.gameObject.SetActive(true);
             heroWeaponImg.sprite = ResourcesMgr.Instance().LoadSprite(curHero.curWeapon.sprite); 
             heroWeaponName.text = curHero.curWeapon.name;
             heroDmg.text = DataManager.GetDamge(curHero, curEnemy).ToString();
@@ -83,16 +84,18 @@ public class FightMainView : UIBase {
         }
         else
         {
-            heroWeaponName.text = "--";
+            heroWeaponImg.gameObject.SetActive(false);
+            heroWeaponName.text = null;
             heroDmg.text = "--";
             heroHit.text = "--";
             heroCrt.text = "--";
         }
 
-        enemyName.text = curEnemy.mName;
-        enemyHpValue.text = curEnemy.cHp.ToString();
+        enemyName.text = curEnemy.rolePro.mName;
+        enemyHpValue.text = curEnemy.rolePro.cHp.ToString();
         if (curEnemy.curWeapon != null)
         {
+            enemyWeaponImg.gameObject.SetActive(true);
             enemyWeaponImg.sprite = ResourcesMgr.Instance().LoadSprite(curEnemy.curWeapon.sprite);
             enemyWeaponName.text = curEnemy.curWeapon.name;
             enemyDmg.text = DataManager.GetDamge(curEnemy, curHero).ToString();
@@ -101,7 +104,8 @@ public class FightMainView : UIBase {
         }
         else
         {
-            enemyWeaponName.text = "--";
+            enemyWeaponImg.gameObject.SetActive(false);
+            enemyWeaponName.text = null;
             enemyDmg.text = "--";
             enemyHit.text = "--";
             enemyCrt.text = "--";
@@ -142,7 +146,7 @@ public class FightMainView : UIBase {
     {
         //hero
         float width1 = heroHpHead.rectTransform.sizeDelta.x / 2;
-        for (int i = 0; i < curHero.tHp; i++)
+        for (int i = 0; i < curHero.rolePro.tHp; i++)
         {
             GameObject hp = ResourcesMgr.Instance().GetPool(MainProperty.FIGHT_HP_PATH);
             float width2 = hp.GetComponent<RectTransform>().sizeDelta.x / 2;
@@ -157,7 +161,7 @@ public class FightMainView : UIBase {
         head.transform.localScale = Vector3.one;
         head.transform.position = heroHpHead.rectTransform.position;
         heroHpValueBody.Add(head);
-        for (int i = 0; i < curHero.cHp; i++)
+        for (int i = 0; i < curHero.rolePro.cHp; i++)
         {
             GameObject hp = ResourcesMgr.Instance().GetPool(MainProperty.FIGHT_HPBODYVALUE_PATH);
             float width2 = hp.GetComponent<RectTransform>().sizeDelta.x / 2;
@@ -168,7 +172,7 @@ public class FightMainView : UIBase {
         }
 
         //enemy
-        for (int i = 0; i < curEnemy.tHp; i++)
+        for (int i = 0; i < curEnemy.rolePro.tHp; i++)
         {
             GameObject hp = ResourcesMgr.Instance().GetPool(MainProperty.FIGHT_HP_PATH);
             float width2 = hp.GetComponent<RectTransform>().sizeDelta.x / 2;
@@ -183,7 +187,7 @@ public class FightMainView : UIBase {
         head1.transform.localScale = Vector3.one;
         head1.transform.position = enemyHpHead.rectTransform.position;
         enemyHpValueBody.Add(head);
-        for (int i = 0; i < curEnemy.cHp; i++)
+        for (int i = 0; i < curEnemy.rolePro.cHp; i++)
         {
             GameObject hp = ResourcesMgr.Instance().GetPool(MainProperty.FIGHT_HPBODYVALUE_PATH);
             float width2 = hp.GetComponent<RectTransform>().sizeDelta.x / 2;
@@ -201,10 +205,10 @@ public class FightMainView : UIBase {
     {
         if (hero)
         {
-            heroHpValue.text = curHero.cHp.ToString();
-            if (curHero.cHp != 0)
+            heroHpValue.text = curHero.rolePro.cHp.ToString();
+            if (curHero.rolePro.cHp != 0)
             {
-                for (int i = heroHpValueBody.Count - 1; i >= curHero.cHp; i--)
+                for (int i = heroHpValueBody.Count - 1; i >= curHero.rolePro.cHp; i--)
                 {
                     ResourcesMgr.Instance().PushPool(heroHpValueBody[i], MainProperty.FIGHT_HPBODYVALUE_PATH);
                     heroHpValueBody.RemoveAt(i);
@@ -223,11 +227,11 @@ public class FightMainView : UIBase {
         }
         else
         {
-            enemyHpValue.text = curEnemy.cHp.ToString();
+            enemyHpValue.text = curEnemy.rolePro.cHp.ToString();
             //逐渐减少效果还没加
-            if (curEnemy.cHp != 0)
+            if (curEnemy.rolePro.cHp != 0)
             {
-                for (int i = enemyHpValueBody.Count - 1; i >= curEnemy.cHp; i--)
+                for (int i = enemyHpValueBody.Count - 1; i >= curEnemy.rolePro.cHp; i--)
                 {
                     ResourcesMgr.Instance().PushPool(enemyHpValueBody[i], MainProperty.FIGHT_HPBODYVALUE_PATH);
                     enemyHpValueBody.RemoveAt(i);

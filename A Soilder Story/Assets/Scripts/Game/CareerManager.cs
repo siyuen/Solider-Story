@@ -27,6 +27,19 @@ public class CareerManager : QSingleton<CareerManager> {
     }
 
     /// <summary>
+    /// 武器是否匹配
+    /// </summary>
+    public bool WeaponMatching(string career, string key)
+    {
+        string weapon1 = keyCareerDic[career].weaponkey1;
+        string weapon2 = keyCareerDic[career].weaponkey2;
+        if (key == weapon1 || key == weapon2)
+            return true;
+        else
+            return false;
+    }
+
+    /// <summary>
     /// 升级，计算增加属性
     /// </summary>
     public bool LevelUP(string key, string point)

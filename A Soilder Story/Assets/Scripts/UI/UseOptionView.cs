@@ -9,6 +9,7 @@ public class UseOptionView : UIBase
 {
     public MenuView menuView;
     public GameObject tipsObj;
+    public GameObject tipsObj2;
 
     //是否在显示tips
     private bool bTips;
@@ -35,6 +36,7 @@ public class UseOptionView : UIBase
     public void Init()
     {
         tipsObj.SetActive(false);
+        tipsObj2.SetActive(false);
         bTips = false;
         if (ItemManager.Instance().curWeapon == null && ItemManager.Instance().curItem == null)
             return;
@@ -102,10 +104,18 @@ public class UseOptionView : UIBase
     /// </summary>
     private void InstallWeapon()
     {
-        UIManager.Instance().CloseUIForms("UseOption");
-        ItemMenuView view = UIManager.Instance().GetUI("ItemMenu").GetComponent<ItemMenuView>();
-        MainManager.Instance().curHero.SetCurWeapon(ItemManager.Instance().curWeapon.tag);
-        view.UpdateItemView();
+        if (MainManager.Instance().curHero.WeaponMatching(ItemManager.Instance().curWeapon.tag))
+        {
+            UIManager.Instance().CloseUIForms("UseOption");
+            ItemMenuView view = UIManager.Instance().GetUI("ItemMenu").GetComponent<ItemMenuView>();
+            MainManager.Instance().curHero.SetCurWeapon(ItemManager.Instance().curWeapon.tag);
+            view.UpdateItemView();
+        }
+        else
+        {
+            bTips = true;
+            tipsObj2.SetActive(true);
+        }
     }
 
     /// <summary>
@@ -154,6 +164,7 @@ public class UseOptionView : UIBase
         {
             bTips = false;
             tipsObj.SetActive(false);
+            tipsObj2.SetActive(false);
         }
     }
 }

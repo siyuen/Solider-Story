@@ -64,23 +64,23 @@ public class RoleDataView : UIBase {
         if(MainManager.Instance().curMouseHero)
         {
             curHero = MainManager.Instance().curMouseHero;
-            roleId = curHero.mID;
-            heroImage.sprite = ResourcesMgr.Instance().LoadSprite(curHero.lImage);
-            careerText.text = curHero.mCareer.ToString();
-            levelText.text = curHero.mLevel.ToString();
-            expText.text = curHero.mExp.ToString();
-            cHpText.text = curHero.cHp.ToString();
-            tHpText.text = curHero.tHp.ToString();
+            roleId = curHero.rolePro.mID;
+            heroImage.sprite = ResourcesMgr.Instance().LoadSprite(curHero.rolePro.lImage);
+            careerText.text = curHero.rolePro.mCareer.ToString();
+            levelText.text = curHero.rolePro.mLevel.ToString();
+            expText.text = curHero.rolePro.mExp.ToString();
+            cHpText.text = curHero.rolePro.cHp.ToString();
+            tHpText.text = curHero.rolePro.tHp.ToString();
         }
         else if (MainManager.Instance().curMouseEnemy)
         {
             curEnemy = MainManager.Instance().curMouseEnemy;
-            heroImage.sprite = ResourcesMgr.Instance().LoadSprite(curEnemy.lImage);
-            careerText.text = curEnemy.mCareer.ToString();
-            levelText.text = curEnemy.mLevel.ToString();
-            expText.text = curEnemy.mExp.ToString();
-            cHpText.text = curEnemy.cHp.ToString();
-            tHpText.text = curEnemy.tHp.ToString();
+            heroImage.sprite = ResourcesMgr.Instance().LoadSprite(curEnemy.rolePro.lImage);
+            careerText.text = curEnemy.rolePro.mCareer.ToString();
+            levelText.text = curEnemy.rolePro.mLevel.ToString();
+            expText.text = curEnemy.rolePro.mExp.ToString();
+            cHpText.text = curEnemy.rolePro.cHp.ToString();
+            tHpText.text = curEnemy.rolePro.tHp.ToString();
         }
         if (mPage == 1)
         {

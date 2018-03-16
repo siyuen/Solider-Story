@@ -17,31 +17,35 @@ public class MainManager : QMonoSingleton<MainManager>
     }
     //是否开始游戏，用于检验目标
     public bool gameDoing;
-
-    public static Vector2 PIVOT = new Vector2(8, -8);
-    public HeroController curHero;  //当前选择的hero
-    public EnemyController curEnemy;  //当前选择的enemy
+    //public static Vector2 PIVOT = new Vector2(8, -8);
+    //当前选择的hero
+    public HeroController curHero;
+    //当前选择的enemy
+    public EnemyController curEnemy;  
     public MapNode curNode;
-    public HeroController curMouseHero;  //当前光标处的hero
-    public EnemyController curMouseEnemy;  //光标处的enemy
-
-    private GameObject mouseCursor;  //正常鼠标光标
-    private int cursorIdx;  //光标当前位置的idx
-    private Animator cursorAnimator;
-    private TiledMap map;
-    private int mapXNode;  //map横轴有多少个node
-    private int mapYNode;  //map纵轴有多少个node
-    public int nodeWidth;  //node的宽高
-    public int nodeHeight;
+    //当前光标处的hero
+    public HeroController curMouseHero;  
+    //光标处的enemy
+    public EnemyController curMouseEnemy;  
     //当前回合
     public bool heroRound;
     public MainState mainState;
 
+    //正常鼠标光标
+    private GameObject mouseCursor;
+    //光标当前位置的idx
+    private int cursorIdx;  
+    private Animator cursorAnimator;
+    private LevelManager levelInstance;
+
+    void Awake()
+    {
+        levelInstance = LevelManager.Instance();
+    }
+
     public void Init()
     {
-        Debug.Log("开始游戏");
         gameDoing = true;
-        SetMapData();
         HeroManager.Instance().Init();
         EnemyManager.Instance().Init();
         //初始化英雄回合
@@ -76,20 +80,9 @@ public class MainManager : QMonoSingleton<MainManager>
     {
         mouseCursor = ResourcesMgr.Instance().GetPool(MainProperty.NORMALCURSOR_PATH);
         cursorIdx = HeroManager.Instance().GetHero(0).mIdx;
-        mouseCursor.transform.position = Idx2Pos(cursorIdx);
+        curNode = levelInstance.GetMapNode(cursorIdx);
+        mouseCursor.transform.position = LevelManager.Instance().Idx2Pos(cursorIdx);
         cursorAnimator = mouseCursor.GetComponent<Animator>();
-    }
-
-    /// <summary>
-    /// 设置地图信息
-    /// </summary>
-    public void SetMapData()
-    {
-        this.map = LevelManager.Instance().curMap.GetComponent<TiledMap>();
-        mapXNode = map.NumTilesWide;
-        mapYNode = map.NumTilesHigh;
-        nodeWidth = map.TileWidth;
-        nodeHeight = map.TileHeight;
     }
 
     public void TemporarySave()
@@ -103,7 +96,6 @@ public class MainManager : QMonoSingleton<MainManager>
 
     public void ContinueGame()
     {
-        SetMapData();
         HeroManager.Instance().Continue();
         EnemyManager.Instance().Continue();
         RegisterKeyBoardEvent();
@@ -194,7 +186,7 @@ public class MainManager : QMonoSingleton<MainManager>
         //处理人物信息ui
         if (curMouseHero || curMouseEnemy)
         {
-            if (Idx2ListPos(cursorIdx).y >= mapYNode / 2)
+            if (levelInstance.Idx2ListPos(cursorIdx).y >= levelInstance.mapYNode / 2)
             {
                 if (!uiInstance.GetUIActive("CharacterData_1"))
                 {
@@ -219,13 +211,12 @@ public class MainManager : QMonoSingleton<MainManager>
             uiInstance.CloseUIForms("CharacterData_1");
         }    
         //地图MapNode
-        if (Idx2ListPos(cursorIdx).x >= mapXNode / 2)
+        if (levelInstance.Idx2ListPos(cursorIdx).x >= levelInstance.mapXNode / 2)
         {
             //一四象限
             if (uiInstance.GetUIActive("CharacterData_2"))
             {
                 uiInstance.ShowUIForms("LandData_2");
-                uiInstance.GetUI("LandData_2").GetComponent<LandDataView_2>().UpdataData(GetMapNode(cursorIdx));
                 uiInstance.CloseUIForms("LandData_1");
                 uiInstance.ShowUIForms("GameGoal_1");
                 uiInstance.CloseUIForms("GameGoal_2");
@@ -233,10 +224,9 @@ public class MainManager : QMonoSingleton<MainManager>
             else
             {
                 uiInstance.ShowUIForms("LandData_1");
-                uiInstance.GetUI("LandData_1").GetComponent<LandDataView_1>().UpdataData(GetMapNode(cursorIdx));
                 uiInstance.CloseUIForms("LandData_2");
                 //第四象限
-                if (Idx2ListPos(cursorIdx).y >= mapYNode / 2)
+                if (levelInstance.Idx2ListPos(cursorIdx).y >= levelInstance.mapYNode / 2)
                 {
                     uiInstance.ShowUIForms("GameGoal_1");
                     uiInstance.CloseUIForms("GameGoal_2");
@@ -259,7 +249,6 @@ public class MainManager : QMonoSingleton<MainManager>
             else
                 uiInstance.ShowUIForms("GameGoal_1");
             uiInstance.ShowUIForms("LandData_2");
-            uiInstance.GetUI("LandData_2").GetComponent<LandDataView_2>().UpdataData(GetMapNode(cursorIdx));
             uiInstance.CloseUIForms("LandData_1");
         }  
     }
@@ -276,7 +265,7 @@ public class MainManager : QMonoSingleton<MainManager>
         if(IsMouseClick)
             position = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         else
-            position = Idx2Pos(cursorIdx);
+            position = levelInstance.Idx2Pos(cursorIdx);
         RaycastHit2D hit = new RaycastHit2D();
         LayerMask mask = -1;
         mask = LayerMask.GetMask(layer);
@@ -331,7 +320,7 @@ public class MainManager : QMonoSingleton<MainManager>
             {
                 if (!node.locatedHero)
                 {
-                    GetMapNode(curHero.mIdx).locatedHero = null;
+                    levelInstance.GetMapNode(curHero.mIdx).locatedHero = null;
                     node.locatedHero = curHero;
                     curHero.MoveTo(node.GetID());
                 }
@@ -339,7 +328,7 @@ public class MainManager : QMonoSingleton<MainManager>
                 {
                     if (node.GetID() != curHero.mIdx)
                         return;
-                    GetMapNode(curHero.mIdx).locatedHero = null;
+                    levelInstance.GetMapNode(curHero.mIdx).locatedHero = null;
                     node.locatedHero = curHero;
                     curHero.MoveTo(node.GetID());
                 }
@@ -360,11 +349,11 @@ public class MainManager : QMonoSingleton<MainManager>
     {
         Camera mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
         Vector2 position = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-        if (!IsInMap(position))
+        if (!levelInstance.IsInMap(position))
             return;
         if (!IsChangeIdx(position))
             return;
-        mouseCursor.transform.position = Idx2Pos(cursorIdx);
+        mouseCursor.transform.position = levelInstance.Idx2Pos(cursorIdx);
         RaycastHit2D hit = Physics2D.Raycast(position, Vector2.zero, 0, LayerMask.GetMask("Character"));
         if (hit)
             MouseEnterCharacter(hit);
@@ -419,14 +408,13 @@ public class MainManager : QMonoSingleton<MainManager>
         UIManager uiInstance = UIManager.Instance();
         //地图MapNode
         int id = hit.collider.GetComponent<MapNode>().GetID();
-        if (Idx2ListPos(id).x >= mapXNode / 2)
+        if (levelInstance.Idx2ListPos(id).x >= levelInstance.mapXNode / 2)
         {
             //一四象限
             uiInstance.ShowUIForms("LandData_1");
-            uiInstance.GetUI("LandData_1").GetComponent<LandDataView_1>().UpdataData(GetMapNode(id));
             uiInstance.CloseUIForms("LandData_2");
             //第四象限
-            if (Idx2ListPos(id).y >= mapYNode / 2)
+            if (levelInstance.Idx2ListPos(id).y >= levelInstance.mapYNode / 2)
             {
                 uiInstance.ShowUIForms("GameGoal_1");
                 uiInstance.CloseUIForms("GameGoal_2");
@@ -446,7 +434,6 @@ public class MainManager : QMonoSingleton<MainManager>
                 uiInstance.CloseUIForms("GameGoal_2");
             }
             uiInstance.ShowUIForms("LandData_2");
-            uiInstance.GetUI("LandData_2").GetComponent<LandDataView_2>().UpdataData(GetMapNode(id));
             uiInstance.CloseUIForms("LandData_1");
         }
     }
@@ -500,17 +487,17 @@ public class MainManager : QMonoSingleton<MainManager>
     /// </summary>
     private void TurnUp()
     {
-        int id = cursorIdx - mapXNode;
-        if (IsInMap(id))
+        int id = cursorIdx - levelInstance.mapXNode;
+        if (levelInstance.IsInMap(id))
         {
             cursorIdx = id;
-            mouseCursor.transform.position = Idx2Pos(id);
+            mouseCursor.transform.position = levelInstance.Idx2Pos(id);
             CursorUpdate();
             UpdateUIPos();
             //选择hero情况下，显示路径
             if (curHero)
             {
-                if (GetMapNode(id).canMove)
+                if (levelInstance.GetMapNode(id).canMove)
                     MoveManager.Instance().ShowRoad(id);
             }
         }
@@ -518,16 +505,16 @@ public class MainManager : QMonoSingleton<MainManager>
 
     private void TurnDown()
     {
-        int id = cursorIdx + mapXNode;
-        if (IsInMap(id))
+        int id = cursorIdx + levelInstance.mapXNode;
+        if (levelInstance.IsInMap(id))
         {
             cursorIdx = id;
-            mouseCursor.transform.position = Idx2Pos(id);
+            mouseCursor.transform.position = levelInstance.Idx2Pos(id);
             CursorUpdate();
             UpdateUIPos();
             if (curHero)
             {
-                if (GetMapNode(id).canMove)
+                if (levelInstance.GetMapNode(id).canMove)
                     MoveManager.Instance().ShowRoad(id);
             }
         }
@@ -536,17 +523,17 @@ public class MainManager : QMonoSingleton<MainManager>
     private void TurnLeft()
     {
         int id = cursorIdx - 1;
-        int nowRow = (int)Idx2ListPos(cursorIdx).y;
-        int turnRow = (int)Idx2ListPos(id).y;
-        if (IsInMap(id) && nowRow == turnRow)
+        int nowRow = (int)levelInstance.Idx2ListPos(cursorIdx).y;
+        int turnRow = (int)levelInstance.Idx2ListPos(id).y;
+        if (levelInstance.IsInMap(id) && nowRow == turnRow)
         {
             cursorIdx = id;
-            mouseCursor.transform.position = Idx2Pos(id);
+            mouseCursor.transform.position = levelInstance.Idx2Pos(id);
             CursorUpdate();
             UpdateUIPos();
             if (curHero)
             {
-                if (GetMapNode(id).canMove)
+                if (levelInstance.GetMapNode(id).canMove)
                     MoveManager.Instance().ShowRoad(id);
             }
         }
@@ -555,17 +542,17 @@ public class MainManager : QMonoSingleton<MainManager>
     private void TurnRight()
     {
         int id = cursorIdx + 1;
-        int nowRow = (int)Idx2ListPos(cursorIdx).y;
-        int turnRow = (int)Idx2ListPos(id).y;
-        if (IsInMap(id) && nowRow == turnRow)
+        int nowRow = (int)levelInstance.Idx2ListPos(cursorIdx).y;
+        int turnRow = (int)levelInstance.Idx2ListPos(id).y;
+        if (levelInstance.IsInMap(id) && nowRow == turnRow)
         {
             cursorIdx = id;
-            mouseCursor.transform.position = Idx2Pos(id);
+            mouseCursor.transform.position = levelInstance.Idx2Pos(id);
             CursorUpdate();
             UpdateUIPos();
             if (curHero)
             {
-                if (GetMapNode(id).canMove)
+                if (levelInstance.GetMapNode(id).canMove)
                     MoveManager.Instance().ShowRoad(id);
             }
         }
@@ -580,14 +567,14 @@ public class MainManager : QMonoSingleton<MainManager>
         //判断当前是否有选择hero
         if (!curHero && !curEnemy)
         {
-            if (GetMapNode(cursorIdx).locatedHero)
+            if (curNode.locatedHero)
             {
-                HeroController hero = GetMapNode(cursorIdx).locatedHero;
+                HeroController hero = levelInstance.GetMapNode(cursorIdx).locatedHero;
                 hero.Selected();
             }
-            else if (GetMapNode(cursorIdx).locatedEnemy)
+            else if (curNode.locatedEnemy)
             {
-                EnemyController enemy = GetMapNode(cursorIdx).locatedEnemy;
+                EnemyController enemy = levelInstance.GetMapNode(cursorIdx).locatedEnemy;
                 curEnemy = enemy;
                 enemy.Selected();
             }
@@ -600,22 +587,21 @@ public class MainManager : QMonoSingleton<MainManager>
         }
         else if (curHero)
         {
-            MapNode node = GetMapNode(cursorIdx);
             //如果点击的块在移动范围内且没有其他人物则可以移动
-            if (node.bVisited && !node.locatedEnemy && !node.locatedHero)
+            if (curNode.bVisited && !curNode.locatedEnemy && !curNode.locatedHero)
             {
                 UnRegisterKeyBoradEvent();
                 SetCursorActive(false);
-                node.locatedHero = curHero;
-                curHero.MoveTo(node.GetID());
+                curNode.locatedHero = curHero;
+                curHero.MoveTo(curNode.GetID());
             }
             //是否点击当前hero
-            else if (node.locatedHero == curHero)
+            else if (curNode.locatedHero == curHero)
             {
                 UnRegisterKeyBoradEvent();
                 SetCursorActive(false);
-                node.locatedHero = curHero;
-                curHero.MoveTo(node.GetID());
+                curNode.locatedHero = curHero;
+                curHero.MoveTo(curNode.GetID());
             }
         }
         else if(curEnemy)
@@ -633,7 +619,6 @@ public class MainManager : QMonoSingleton<MainManager>
         if (curHero)
         {
             curHero.CancelSelected();
-            GetMapNode(curHero.mIdx).locatedHero = curHero;
             SetCursorPos(curHero.mIdx);
             curHero = null;
             CursorUpdate();
@@ -663,6 +648,7 @@ public class MainManager : QMonoSingleton<MainManager>
     /// </summary>
     public void CursorUpdate()
     {
+        curNode = levelInstance.GetMapNode(cursorIdx);
         if (curMouseHero)
         {
             curMouseHero.SetAnimator("bMouse", false);
@@ -675,135 +661,37 @@ public class MainManager : QMonoSingleton<MainManager>
         }
 
         //当前mapNode是否有hero
-        if (GetMapNode(cursorIdx).locatedHero)
+        if (curNode.locatedHero)
         {
             //判断当前是否有选择hero
             if (!curHero)
             {
                 //鼠标进入hero
-                curMouseHero = GetMapNode(cursorIdx).locatedHero;
+                curMouseHero = curNode.locatedHero;
                 curMouseHero.SetAnimator("bMouse", true);
                 if (mouseCursor.activeSelf)
                     cursorAnimator.SetBool("Hero", true);
             }
         }
-
         //当前块是否有ennemy
-        if (GetMapNode(cursorIdx).locatedEnemy )
+        else if (curNode.locatedEnemy)
         {
             if (!curHero)
             {
                 //鼠标进入enemy
-                curMouseEnemy = GetMapNode(cursorIdx).locatedEnemy;
+                curMouseEnemy = curNode.locatedEnemy;
             }  
         }
+        //更新landData
+        if (UIManager.Instance().GetUIActive("LandData_1"))
+            UIManager.instance.GetUI("LandData_1").GetComponent<LandDataView_1>().UpdateData();
+        else if (UIManager.Instance().GetUIActive("LandData_2"))
+            UIManager.instance.GetUI("LandData_2").GetComponent<LandDataView_2>().UpdateData();
     }
 
     #endregion
 
-    #region 公有方法:判断是否在地图内;转换idx跟pos;UI显示;判断两个idx的方位;设置光标可见性
-    /// <summary>
-    /// 判断是否在地图内
-    /// </summary>
-    public bool IsInMap(int idx)
-    {
-        int count = mapXNode * mapYNode;
-        if (idx >= count || idx < 0)
-            return false;
-        else
-            return true;
-    }
-
-    public bool IsInMap(Vector3 pos)
-    {
-        if (map.GetMapRect().Contains(pos))
-            return true;
-        else
-            return false;
-    }
-
-    /// <summary>
-    /// 根据pos计算idx
-    /// </summary>
-    public int Pos2Idx(Vector3 pos)
-    {
-        int x = (int)(pos.x / nodeWidth);
-        int y = (int)(Mathf.Abs(pos.y / nodeHeight));
-        int idx = x + y * mapXNode;
-        return idx;
-    }
-    
-    /// <summary>
-    /// 根据idx计算pos,锚点为中间
-    /// </summary>
-    public Vector3 Idx2Pos(int idx)
-    {
-        int x = idx % mapXNode;
-        int y = idx / mapXNode;
-        Vector3 pos = new Vector3(x * nodeWidth + PIVOT.x, -(y * nodeHeight - PIVOT.y), 0);
-        return pos;
-    }
-
-    /// <summary>
-    /// 根据idx计算pos,锚点为左上角
-    /// </summary>
-    public Vector3 Idx2Pos2(int idx)
-    {
-        int x = idx % mapXNode;
-        int y = idx / mapXNode;
-        Vector3 pos = new Vector3(x * nodeWidth, -(y * nodeHeight), 0);
-        return pos;
-    }
-
-    /// <summary>
-    /// 获取几行
-    /// </summary>
-    public int GetXNode()
-    {
-        return mapXNode;
-    }
-
-    /// <summary>
-    /// 获取几列
-    /// </summary>
-    public int GetYNode()
-    {
-        return mapYNode;
-    }
-
-    /// <summary>
-    /// 将idx转换成在list中的pos
-    /// </summary>
-    public Vector2 Idx2ListPos(int idx)
-    {
-        int x = idx % mapXNode;
-        int y = idx / mapXNode;
-        return new Vector2(x, y);
-    }
-
-    /// <summary>
-    /// 两个idx的距离
-    /// </summary>
-    public int Idx2IdxDis(int i1, int i2)
-    {
-        int dis = 0;
-        Vector2 pos1 = Idx2ListPos(i1);
-        Vector2 pos2 = Idx2ListPos(i2);
-        dis = (int)(Mathf.Abs(pos1.x - pos2.x) + Mathf.Abs(pos1.y - pos2.y));
-
-        return dis;
-    }
-
-    /// <summary>
-    /// 获取图块
-    /// </summary>
-    public MapNode GetMapNode(int idx)
-    {
-        if (!IsInMap(idx))
-            return null;
-        return MoveManager.Instance().GetMapNode(idx);
-    }
-
+    #region 公有方法:UI显示;判断两个idx的方位;设置光标可见性
     /// <summary>
     /// 设置光标位置
     /// </summary>
@@ -812,7 +700,7 @@ public class MainManager : QMonoSingleton<MainManager>
         if (cursorIdx == idx)
             return;
         cursorIdx = idx;
-        mouseCursor.transform.position = Idx2Pos(idx);
+        mouseCursor.transform.position = LevelManager.Instance().Idx2Pos(idx);
         CursorUpdate();
     }
 
@@ -837,8 +725,8 @@ public class MainManager : QMonoSingleton<MainManager>
     /// </summary>
     public int GetIdx2IdxPos(int idx1, int idx2)
     {
-        Vector2 pos1 = Idx2ListPos(idx1);
-        Vector2 pos2 = Idx2ListPos(idx2);
+        Vector2 pos1 = LevelManager.Instance().Idx2ListPos(idx1);
+        Vector2 pos2 = LevelManager.Instance().Idx2ListPos(idx2);
         if (pos1.x != pos2.x && pos1.y != pos2.y)
             return -1;
         if (pos1.x == pos2.x)
@@ -879,7 +767,7 @@ public class MainManager : QMonoSingleton<MainManager>
     /// </summary>
     private bool IsChangeIdx(Vector3 pos)
     {
-        int idx = Pos2Idx(pos);
+        int idx = LevelManager.Instance().Pos2Idx(pos);
         if (idx != cursorIdx)
         {
             cursorIdx = idx;

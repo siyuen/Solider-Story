@@ -43,18 +43,18 @@ public class LevelUpView : UIBase {
     private void Init()
     {
         HeroController hero = MainManager.Instance().curHero;
-        heroImg.sprite = ResourcesMgr.Instance().LoadSprite(hero.lImage);
-        careerName.text = hero.mCareer;
-        levelText.text = hero.mLevel.ToString();
+        heroImg.sprite = ResourcesMgr.Instance().LoadSprite(hero.rolePro.lImage);
+        careerName.text = hero.rolePro.mCareer;
+        levelText.text = hero.rolePro.mLevel.ToString();
 
-        hpText.text = hero.tHp.ToString();
-        powerText.text = hero.mPower.ToString();
-        skillText.text = hero.mSkill.ToString();
-        speedText.text = hero.mSpeed.ToString();
-        luckyText.text = hero.mLucky.ToString();
-        pDefenseText.text = hero.pDefense.ToString();
-        mDefensepText.text = hero.mDefense.ToString();
-        strengthText.text = hero.mStrength.ToString();
+        hpText.text = hero.rolePro.tHp.ToString();
+        powerText.text = hero.rolePro.mPower.ToString();
+        skillText.text = hero.rolePro.mSkill.ToString();
+        speedText.text = hero.rolePro.mSpeed.ToString();
+        luckyText.text = hero.rolePro.mLucky.ToString();
+        pDefenseText.text = hero.rolePro.pDefense.ToString();
+        mDefensepText.text = hero.rolePro.mDefense.ToString();
+        strengthText.text = hero.rolePro.mStrength.ToString();
     }
 
     private void Clear()
@@ -67,49 +67,49 @@ public class LevelUpView : UIBase {
         HeroController hero = MainManager.Instance().curHero;
         float time = 0.7f;
         Vector3 pos = levelText.transform.localPosition - new Vector3(90, 0, 0);
-        ShowBling(levelText, hero.mLevel.ToString(), pos, time);
+        ShowBling(levelText, hero.rolePro.mLevel.ToString(), pos, time);
 
         float add = 0.15f;
         float time1 = 0.15f;
         Vector3 pos1 = new Vector3(90, 10, 0);
-        if (hero.tHp.ToString() != hpText.text)
+        if (hero.rolePro.tHp.ToString() != hpText.text)
         {
-            ShowAddPoint(hpText, hero.tHp.ToString(), pos1, time + time1);
+            ShowAddPoint(hpText, hero.rolePro.tHp.ToString(), pos1, time + time1);
             time1 += add;
         }
-        if (hero.mPower.ToString() != powerText.text)
+        if (hero.rolePro.mPower.ToString() != powerText.text)
         {
-            ShowAddPoint(powerText, hero.mPower.ToString(), pos1, time + time1);
+            ShowAddPoint(powerText, hero.rolePro.mPower.ToString(), pos1, time + time1);
             time1 += add;
         }
-        if (hero.mSkill.ToString() != skillText.text)
+        if (hero.rolePro.mSkill.ToString() != skillText.text)
         {
-            ShowAddPoint(skillText, hero.mSkill.ToString(), pos1, time + time1);
+            ShowAddPoint(skillText, hero.rolePro.mSkill.ToString(), pos1, time + time1);
             time1 += add;
         }
-        if (hero.mSpeed.ToString() != speedText.text)
+        if (hero.rolePro.mSpeed.ToString() != speedText.text)
         {
-            ShowAddPoint(speedText, hero.mSpeed.ToString(), pos1, time + time1);
+            ShowAddPoint(speedText, hero.rolePro.mSpeed.ToString(), pos1, time + time1);
             time1 += add;
         }
-        if (hero.mLucky.ToString() != luckyText.text)
+        if (hero.rolePro.mLucky.ToString() != luckyText.text)
         {
-            ShowAddPoint(luckyText, hero.mLucky.ToString(), pos1, time + time1);
+            ShowAddPoint(luckyText, hero.rolePro.mLucky.ToString(), pos1, time + time1);
             time1 += add;
         }
-        if (hero.pDefense.ToString() != pDefenseText.text)
+        if (hero.rolePro.pDefense.ToString() != pDefenseText.text)
         {
-            ShowAddPoint(pDefenseText, hero.pDefense.ToString(), pos1, time + time1);
+            ShowAddPoint(pDefenseText, hero.rolePro.pDefense.ToString(), pos1, time + time1);
             time1 += add;
         }
-        if (hero.mDefense.ToString() != mDefensepText.text)
+        if (hero.rolePro.mDefense.ToString() != mDefensepText.text)
         {
-            ShowAddPoint(mDefensepText, hero.mDefense.ToString(), pos1, time + time1);
+            ShowAddPoint(mDefensepText, hero.rolePro.mDefense.ToString(), pos1, time + time1);
             time1 += add;
         }
-        if (hero.mStrength.ToString() != strengthText.text)
+        if (hero.rolePro.mStrength.ToString() != strengthText.text)
         {
-            ShowAddPoint(strengthText, hero.mStrength.ToString(), pos1, time + time1);
+            ShowAddPoint(strengthText, hero.rolePro.mStrength.ToString(), pos1, time + time1);
             time1 += add;
         }
         //通知fightMgr结束

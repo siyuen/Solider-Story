@@ -24,7 +24,6 @@ public class InputManager : QMonoSingleton<InputManager> {
     private Vector3 mousePos;
     //事件列表
     private List<int> mouseEventList= new List<int>();
-    private List<int> keyBoardEventList = new List<int>();
     private Dictionary<int, KeyBoardHandle> eventTypeDic = new Dictionary<int, KeyBoardHandle>();
 
     void Awake()
@@ -79,12 +78,8 @@ public class InputManager : QMonoSingleton<InputManager> {
     /// </summary>
     public void RegisterKeyDownEvent(KeyBoardHandle action, int type)
     {
-        if (keyBoardEventList.Contains(type))
+        if (!eventTypeDic.ContainsKey(type) || eventTypeDic[type] != null)
             return;
-        if (!eventTypeDic.ContainsKey(type))
-            return;
-
-        keyBoardEventList.Add(type);
         eventTypeDic[type] += action;
     }
 
@@ -93,12 +88,8 @@ public class InputManager : QMonoSingleton<InputManager> {
     /// </summary>
     public void UnRegisterKeyDownEvent(KeyBoardHandle action, int type)
     {
-        if (!keyBoardEventList.Contains(type))
+        if (!eventTypeDic.ContainsKey(type) || eventTypeDic[type] == null)
             return;
-        if (!eventTypeDic.ContainsKey(type))
-            return;
-
-        keyBoardEventList.Remove(type);
         eventTypeDic[type] -= action;
     }
 

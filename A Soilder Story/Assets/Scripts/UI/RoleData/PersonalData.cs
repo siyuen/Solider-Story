@@ -22,41 +22,22 @@ public class PersonalData : MonoBehaviour {
     public Slider mDefenseValue;
     public Slider moveValue;
 
-    public void InitData(HeroController hero)
+    public void InitData(Character role)
     {
-        powerText.text = hero.mPower.ToString();
-        skillText.text = hero.mSkill.ToString();
-        speedText.text = hero.mSpeed.ToString();
-        luckyText.text = hero.mLucky.ToString();
-        pDefenseText.text = hero.pDefense.ToString();
-        mDefenseText.text = hero.mDefense.ToString();
-        moveText.text = hero.mMove.ToString();
+        powerText.text = role.rolePro.mPower.ToString();
+        skillText.text = role.rolePro.mSkill.ToString();
+        speedText.text = role.rolePro.mSpeed.ToString();
+        luckyText.text = role.rolePro.mLucky.ToString();
+        pDefenseText.text = role.rolePro.pDefense.ToString();
+        mDefenseText.text = role.rolePro.mDefense.ToString();
+        moveText.text = role.rolePro.mMove.ToString();
 
-        powerValue.value = hero.mPower;
-        skillValue.value = hero.mSkill;
-        speedValue.value = hero.mSpeed;
-        luckyValue.value = hero.mLucky;
-        pDefenseValue.value = hero.pDefense;
-        mDefenseValue.value = hero.mDefense;
-        moveValue.value = hero.mMove;
-    }
-
-    public void InitData(EnemyController enemy)
-    {
-        powerText.text = enemy.mPower.ToString();
-        skillText.text = enemy.mSkill.ToString();
-        speedText.text = enemy.mSpeed.ToString();
-        luckyText.text = enemy.mLucky.ToString();
-        pDefenseText.text = enemy.pDefense.ToString();
-        mDefenseText.text = enemy.mDefense.ToString();
-        moveText.text = enemy.mMove.ToString();
-
-        powerValue.value = enemy.mPower;
-        skillValue.value = enemy.mSkill;
-        speedValue.value = enemy.mSpeed;
-        luckyValue.value = enemy.mLucky;
-        pDefenseValue.value = enemy.pDefense;
-        mDefenseValue.value = enemy.mDefense;
-        moveValue.value = enemy.mMove;
+        powerValue.value = role.rolePro.mPower;
+        skillValue.value = role.rolePro.mSkill;
+        speedValue.value = role.rolePro.mSpeed;
+        luckyValue.value = role.rolePro.mLucky;
+        pDefenseValue.value = role.rolePro.pDefense;
+        mDefenseValue.value = role.rolePro.mDefense;
+        moveValue.value = role.rolePro.mMove;
     }
 }

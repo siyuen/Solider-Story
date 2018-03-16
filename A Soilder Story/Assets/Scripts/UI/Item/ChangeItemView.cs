@@ -53,8 +53,8 @@ public class ChangeItemView : UIBase {
         changeView.gameObject.SetActive(false);
         heroList = MainManager.Instance().curHero.CheckHero();
         attackCursor = ResourcesMgr.Instance().GetPool(MainProperty.ATTACKCURSOR_PATH);
-        attackCursor.transform.position = MainManager.Instance().Idx2Pos(heroList[0]);
-        cursorHero = MainManager.Instance().GetMapNode(heroList[0]).locatedHero;
+        attackCursor.transform.position = LevelManager.Instance().Idx2Pos(heroList[0]);
+        cursorHero = LevelManager.Instance().GetMapNode(heroList[0]).locatedHero;
         cursorIdx = 0;
         SetData();
         RegisterEvent();
@@ -74,7 +74,7 @@ public class ChangeItemView : UIBase {
     private void SetData()
     {
         tipsObj.SetActive(false);
-        heroName.text = cursorHero.mName;
+        heroName.text = cursorHero.rolePro.mName;
         for (int i = 0; i < cursorHero.bagList.Count; i++)
         {
             GameObject item = ResourcesMgr.Instance().GetPool(MainProperty.ITEM2_PATH);
@@ -170,7 +170,7 @@ public class ChangeItemView : UIBase {
 
     private void UpdateData()
     {
-        attackCursor.transform.position = MainManager.Instance().Idx2Pos(heroList[cursorIdx]);
+        attackCursor.transform.position = LevelManager.Instance().Idx2Pos(heroList[cursorIdx]);
         //将上一次的item clear
         for (int i = 0; i < itemList.Count; i++)
         {
@@ -178,7 +178,7 @@ public class ChangeItemView : UIBase {
         }
         ResourcesMgr.Instance().PushPool(itemList, MainProperty.ITEM2_PATH);
         itemList.Clear();
-        cursorHero = MainManager.Instance().GetMapNode(heroList[cursorIdx]).locatedHero;
+        cursorHero = LevelManager.Instance().GetMapNode(heroList[cursorIdx]).locatedHero;
         SetData();
     }
 }

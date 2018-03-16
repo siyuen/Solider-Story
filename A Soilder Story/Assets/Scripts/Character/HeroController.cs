@@ -21,7 +21,7 @@ public class HeroController : Character
     void Start()
     {
         dirStr = "bNormal";
-        fightRole = ResourcesMgr.Instance().GetPool(fightPrefab);
+        fightRole = ResourcesMgr.Instance().GetPool(rolePro.fightPrefab);
         fightRole.transform.SetParent(HeroManager.Instance().heroContent.transform);
         fightRole.SetActive(false);
         isHero = true;
@@ -36,60 +36,14 @@ public class HeroController : Character
         bStandby = false;
         bMove = false;
         bChangeItem = false;
-        mIdx = mainInstance.Pos2Idx(this.transform.position);
-        mainInstance.GetMapNode(mIdx).locatedHero = this;
+        mIdx = levelInstance.Pos2Idx(this.transform.position);
+        levelInstance.GetMapNode(mIdx).locatedHero = this;
     }
 
     public void Clear()
     {
-        MainManager.Instance().GetMapNode(mIdx).locatedHero = null;
-        ResourcesMgr.Instance().PushPool(fightRole, fightPrefab);
-    }
-
-    public void InitData(HeroProData data)
-    {
-        mID = DataManager.Value(data.id);
-        mCareer = CareerManager.Instance().key2NameDic[data.career];
-        mLevel = DataManager.Value(data.level);
-        mExp = DataManager.Value(data.exp);
-        mName = HeroManager.Instance().key2NameDic[data.name];
-        tHp = DataManager.Value(data.thp);
-        cHp = DataManager.Value(data.chp);
-        mPower = DataManager.Value(data.power);
-        mSkill = DataManager.Value(data.skill);
-        mSpeed = DataManager.Value(data.speed);
-        mLucky = DataManager.Value(data.lucky);
-        pDefense = DataManager.Value(data.pdefense);
-        mDefense = DataManager.Value(data.mdefense);
-        mMove = DataManager.Value(data.move);
-        mStrength = DataManager.Value(data.strength);
-        sImage = data.simage;
-        lImage = data.limage;
-        mPrefab = data.prefab;
-        fightPrefab = data.fightprefab;
-    }
-
-    /// <summary>
-    /// 保存数据
-    /// </summary>
-    public HeroProData SaveData()
-    {
-        HeroProData data = HeroManager.Instance().curHero[mID];
-        data.name = HeroManager.Instance().name2KeyDic[mName];
-        data.career = CareerManager.Instance().name2KeyDic[mCareer];
-        data.level = mLevel.ToString();
-        data.exp = mExp.ToString();
-        data.chp = cHp.ToString();
-        data.thp = tHp.ToString();
-        data.power = mPower.ToString();
-        data.skill = mSkill.ToString();
-        data.speed = mSpeed.ToString();
-        data.lucky = mLucky.ToString();
-        data.pdefense = pDefense.ToString();
-        data.mdefense = mDefense.ToString();
-        data.move = mMove.ToString();
-        data.strength = mStrength.ToString();
-        return data;
+        levelInstance.GetMapNode(mIdx).locatedHero = null;
+        ResourcesMgr.Instance().PushPool(fightRole, rolePro.fightPrefab);
     }
 
     public void SetCurWeapon(int idx)
@@ -119,12 +73,13 @@ public class HeroController : Character
             if (weaponList[i].tag == tag && WeaponMatching(weaponList[i]))
             {
                 //设为当前武器，并且将当前武器放置第一位
-                curWeapon = weaponList[i];
+                WeaponData weapon = weaponList[i];
                 //从bag跟wepaon中清除
                 GiveUpItem(tag);
                 //插入第一位
-                bagList.Insert(0, curWeapon);
-                weaponList.Insert(0, curWeapon);
+                bagList.Insert(0, weapon);
+                weaponList.Insert(0, weapon);
+                curWeapon = weaponList[0];
                 return;
             }
         }
@@ -146,14 +101,14 @@ public class HeroController : Character
 
     public override void MoveTo(int to)
     {
-        mainInstance.GetMapNode(mIdx).locatedHero = null;
+        levelInstance.GetMapNode(mIdx).locatedHero = null;
         mainInstance.curMouseHero = null;
         base.MoveTo(to);
     }
 
     public override void MoveTo(MapNode to)
     {
-        mainInstance.GetMapNode(mIdx).locatedHero = null;
+        levelInstance.GetMapNode(mIdx).locatedHero = null;
         mainInstance.curMouseHero = null;
         base.MoveTo(to);
     }
@@ -168,7 +123,7 @@ public class HeroController : Character
     {
         base.MoveDone();
         heroState = HeroState.select;
-        mainInstance.GetMapNode(mIdx).locatedHero = this;
+        levelInstance.GetMapNode(mIdx).locatedHero = this;
         UIManager.Instance().ShowUIForms("HeroMenu");
     }
 
@@ -204,7 +159,7 @@ public class HeroController : Character
     {
         Clear();
         mainInstance.curHero = null;
-        mainInstance.GetMapNode(mIdx).locatedHero = null;
+        levelInstance.GetMapNode(mIdx).locatedHero = null;
         return HeroManager.Instance().SetDead(listIdx);
     }
 
@@ -223,7 +178,7 @@ public class HeroController : Character
             SetAnimator("bSelected", bSelected);
             SetAnimator("bNormal", false);
             SetAnimator("bMouse", false);
-            MoveManager.Instance().ShowMoveRange(this.transform.position, mMove, 1);
+            MoveManager.Instance().ShowMoveRange(this.transform.position, rolePro.mMove, 1);
             mainInstance.HideAllUI();
         }
     }
@@ -234,7 +189,7 @@ public class HeroController : Character
         base.LevelUp(add);
         LevelUpView view = UIManager.Instance().GetUI("LevelUp").GetComponent<LevelUpView>();
         view.LevelUp();
-        mExp -= 100;
+        rolePro.mExp -= 100;
     }
 
     /// <summary>
@@ -247,6 +202,7 @@ public class HeroController : Character
         SetAnimator("bSelected", bSelected);
         SetAnimator("bNormal", true);
         mIdx = fromIdx;
+        levelInstance.GetMapNode(mIdx).locatedHero = this;
         HideMoveRange();
     }
 
@@ -256,13 +212,13 @@ public class HeroController : Character
     public void CancelMoveDone()
     {
         heroState = HeroState.normal;
-        mainInstance.GetMapNode(mIdx).locatedHero = null;
-        this.transform.position = mainInstance.Idx2Pos2(fromIdx);
+        levelInstance.GetMapNode(mIdx).locatedHero = null;
+        this.transform.position = levelInstance.Idx2Pos2(fromIdx);
         mIdx = fromIdx;
         SetAnimator("bSelected", true);
         SetAnimator(dirStr, false);
         MoveManager.Instance().HideAttackRange();
-        MoveManager.Instance().ShowMoveRange(this.transform.position, mMove, 1);
+        MoveManager.Instance().ShowMoveRange(this.transform.position, rolePro.mMove, 1);
         MoveManager.Instance().ShowRoad(mainInstance.GetCursorIdx());
         mainInstance.SetCursorActive(true);
     }

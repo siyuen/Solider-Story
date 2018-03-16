@@ -6,12 +6,17 @@ namespace QFramework
 {
     public class ResourcesMgr : QMonoSingleton<ResourcesMgr>
     {
-        private Hashtable ht = null;                        //容器键值对集合
-        private Dictionary<string, List<GameObject>> objPool = new Dictionary<string, List<GameObject>>(); 
-
+        //private Hashtable ht = null;                        //容器键值对集合
+        private Dictionary<string, object> objDic = null;
+        private Dictionary<string, List<GameObject>> objPool = null;
+        private GameObject content;
         void Awake()
         {
-            ht = new Hashtable();
+            //ht = new Hashtable();
+            objDic = new Dictionary<string, object>();
+            objPool =  new Dictionary<string, List<GameObject>>();
+            content = new GameObject();
+            content.name = "ObjContent";
         }
 
         /// <summary>
@@ -42,6 +47,7 @@ namespace QFramework
         public void PushPool(GameObject obj, string name)
         {
             objPool[name].Add(obj);
+            obj.transform.SetParent(content.transform);
             obj.SetActive(false);
         }
 
@@ -49,6 +55,7 @@ namespace QFramework
         {
             for (int i = 0; i < obj.Count; i++)
             {
+                obj[i].transform.SetParent(content.transform);
                 obj[i].SetActive(false);
                 objPool[name].Add(obj[i]);
             }
@@ -67,9 +74,9 @@ namespace QFramework
         /// <returns></returns>
         public T LoadResource<T>(string path, bool isCatch) where T : UnityEngine.Object
         {
-            if (ht.Contains(path))
+            if (objDic.ContainsKey(path))
             {
-                return ht[path] as T;
+                return objDic[path] as T;
             }
 
             T TResource = Resources.Load<T>(path);
@@ -79,7 +86,7 @@ namespace QFramework
             }
             else if (isCatch)
             {
-                ht.Add(path, TResource);
+                objDic.Add(path, TResource);
             }
             
             return TResource;

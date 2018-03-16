@@ -75,10 +75,10 @@ public class FightManager : QMonoSingleton<FightManager> {
             int dmg = DataManager.GetDamge(curHero, curEnemy);
             if (random < hit)
             {
-                curEnemy.cHp -= dmg;
-                if (curEnemy.cHp <= 0)
+                curEnemy.rolePro.cHp -= dmg;
+                if (curEnemy.rolePro.cHp <= 0)
                 {
-                    curEnemy.cHp = 0;
+                    curEnemy.rolePro.cHp = 0;
                     fightView.SetHp(false);
                     StartCoroutine(DelayToInvoke.DelayToInvokeDo(() => { SetExp(); }, 1f));
                     return;
@@ -98,10 +98,10 @@ public class FightManager : QMonoSingleton<FightManager> {
             int dmg = DataManager.GetDamge(curEnemy, curHero);
             if (random < hit)
             {
-                curHero.cHp -= dmg;
-                if (curHero.cHp <= 0)
+                curHero.rolePro.cHp -= dmg;
+                if (curHero.rolePro.cHp <= 0)
                 {
-                    curHero.cHp = 0;
+                    curHero.rolePro.cHp = 0;
                     fightView.SetHp(true);
                     StartCoroutine(DelayToInvoke.DelayToInvokeDo(() => { SetExp(); }, 1f));
                     return;
@@ -133,7 +133,7 @@ public class FightManager : QMonoSingleton<FightManager> {
         //是否显示经验条
         bool show = false;
         //三种情况:1.enemy死亡 2.hero死亡 3.都没死亡
-        if (curEnemy.cHp <= 0)
+        if (curEnemy.rolePro.cHp <= 0)
         {
             exp = DataManager.GetExp(curHero, curEnemy, true);
             show = true;
@@ -146,9 +146,9 @@ public class FightManager : QMonoSingleton<FightManager> {
             }
             curEnemy = null;
         }
-        else if (curHero.cHp <= 0)
+        else if (curHero.rolePro.cHp <= 0)
         {
-            Debug.Log(curHero.mName);
+            Debug.Log(curHero.rolePro.mName);
             if (!curHero.Dead())
             {
                 curHero = null;
@@ -169,9 +169,9 @@ public class FightManager : QMonoSingleton<FightManager> {
 
         if (show)
         {
-            fightView.SetExp(curHero.mExp, exp);
-            curHero.mExp += exp;
-            if (curHero.mExp >= 100)
+            fightView.SetExp(curHero.rolePro.mExp, exp);
+            curHero.rolePro.mExp += exp;
+            if (curHero.rolePro.mExp >= 100)
             {
                 StartCoroutine(DelayToInvoke.DelayToInvokeDo(() =>
                 {
@@ -212,15 +212,25 @@ public class FightManager : QMonoSingleton<FightManager> {
                     curHero.Standby();
                 else
                 {
-                    MainManager.Instance().SetCursorActive(true);
-                    MainManager.Instance().RegisterKeyBoardEvent();
-                    MainManager.Instance().CursorUpdate();
-                    MainManager.Instance().UpdateUIPos();
+                    //判断是否全部待机了
+                    if (HeroManager.Instance().IsAllStandby())
+                    {
+                        MainManager.Instance().HideAllUI();
+                        MainManager.Instance().UnRegisterKeyBoradEvent();
+                        MainManager.Instance().SetCursorActive(false);
+                        UIManager.Instance().ShowUIForms("Round");
+                    }
+                    else
+                    {
+                        MainManager.Instance().SetCursorActive(true);
+                        MainManager.Instance().RegisterKeyBoardEvent();
+                        MainManager.Instance().CursorUpdate();
+                        MainManager.Instance().UpdateUIPos();
+                    }
                 }
             }
             else if (curRound == ENEMYROUND)
             {
-                Debug.Log(curEnemy);
                 if (curEnemy != null)
                     curEnemy.Standby();
                 else

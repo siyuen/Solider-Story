@@ -20,23 +20,21 @@ public class HeroManager : QSingleton<HeroManager> {
     public const string NORMAL = "normal";
     //主角
     public const string LEADER = "琳";
+    public GameObject heroContent;
     //转换名字的
     public Dictionary<string, string> key2NameDic = new Dictionary<string, string>();
     public Dictionary<string, string> name2KeyDic = new Dictionary<string, string>();
     //hero原始属性
     public Dictionary<string, HeroProData> heroDic;
     //记录hero当前属性
-    public Dictionary<int, HeroProData> curHero;
+    public Dictionary<string, HeroProData> curHero;
     //hero选项
     public Dictionary<string, HeroOptionData> optionDic;
     public Dictionary<string, HeroOptionData> keyOptionDic = new Dictionary<string,HeroOptionData>();
     public Dictionary<string, MenuView.NormalFunc> funcDic = new Dictionary<string, MenuView.NormalFunc>();
     //活着的herolist
     public List<HeroController> liveHeroList = new List<HeroController>();
-    //死亡的herolist
-    private List<HeroController> deadHeroList = new List<HeroController>();
-
-    public GameObject heroContent;
+    
     private int standbyCount;
 
 
@@ -95,19 +93,21 @@ public class HeroManager : QSingleton<HeroManager> {
         List<int> heroPosList = DataManager.Str2List(instance.levelDic[(instance.GetCurLevel()).ToString()].heropos);
         //根据关卡来添加hero
         List<int> heroIdxList = DataManager.Str2List(instance.levelDic[(instance.GetCurLevel()).ToString()].hero);
-        int[] test = {32,54,65};
-        //读取相应存档里的数据，如果没有相应id则从原始hero中读取
-        string path = "Data/HeroData_" + GameManager.Instance().curGameIdx.ToString();
-        curHero = DataManager.LoadJson<HeroProData>(path);
-        //读取到的hero是当前拥有的，还需要添加当前关卡新增加的hero
+        //int[] test = {40,50,70};
+        //读取相应存档里的数据，如果没有相应id则从原始hero中读取(第0关读取原始数据)
+        if (instance.GetCurLevel() != 0)
+        {
+            string path = "Data/HeroData_" + GameManager.Instance().curGameIdx.ToString();
+            curHero = DataManager.Load<HeroProData>(path);
+        }
+        else
+            curHero = new Dictionary<string, HeroProData>();
+        //读取到的hero是当前拥有的，还需要添加当前关卡新增加的hero,key只是顺序
         if (heroIdxList.Count > 0)
         {
-            if (curHero == null)
-                curHero = new Dictionary<int, HeroProData>();
             for (int i = 0; i < heroIdxList.Count; i++)
             {
-                if (curHero.ContainsKey(heroIdxList[i]))
-                    return;
+                //hero的mID（唯一）
                 string id = heroIdxList[i].ToString();
                 //需要new一个新的防止改变原始数据
                 HeroProData hero = CloneHeroData(heroDic[id]);
@@ -127,36 +127,36 @@ public class HeroManager : QSingleton<HeroManager> {
                     itemList.Add(item);
                 }
                 hero.item = JsonMapper.ToJson(itemList);
-                curHero.Add(heroIdxList[i], hero);
+                //添加到最后一位，key按照顺序
+                curHero.Add(curHero.Count.ToString(), hero);
             }
         }
-        Debug.Log("添加Done");
+        //根据当前拥有的hero加载
         for (int i = 0; i < curHero.Count; i++)
         {
-            GameObject hero = ResourcesMgr.Instance().GetPool(curHero[i].prefab);
-            //hero.transform.position = MainManager.Instance().Idx2Pos2(heroPosList[i]);
-            hero.transform.position = MainManager.Instance().Idx2Pos2(test[i]);
+            GameObject hero = ResourcesMgr.Instance().GetPool(curHero[i.ToString()].prefab);
+            hero.transform.position = LevelManager.Instance().Idx2Pos2(heroPosList[i]);
+            //hero.transform.position = LevelManager.Instance().Idx2Pos2(test[i]);
             hero.transform.SetParent(heroContent.transform);
             liveHeroList.Add(hero.GetComponent<HeroController>());
             liveHeroList[i].listIdx = i;
-            //liveHeroList[i].mIdx = heroPosList[i];
-            liveHeroList[i].mIdx = test[i];
+            liveHeroList[i].mIdx = heroPosList[i];
+            //liveHeroList[i].mIdx = test[i];
+            liveHeroList[i].heroState = HeroController.HeroState.normal;
             liveHeroList[i].ClearBag();
-            if (curHero != null && curHero.Count > 0)
+            
+            liveHeroList[i].InitData(curHero[i.ToString()]);
+            List<WeaponData> weaponList = JsonMapper.ToObject<List<WeaponData>>(curHero[i.ToString()].weapon);
+            for (int j = 0; j < weaponList.Count; j++)
             {
-                liveHeroList[i].InitData(curHero[i]);
-                List<WeaponData> weaponList = JsonMapper.ToObject<List<WeaponData>>(curHero[i].weapon);
-                for (int j = 0; j < weaponList.Count; j++)
-                {
-                    liveHeroList[i].AddItem(weaponList[j]);
-                }
-                List<ItemData> itemList = JsonMapper.ToObject<List<ItemData>>(curHero[i].item);
-                for (int j = 0; j < itemList.Count; j++)
-                {
-                    liveHeroList[i].AddItem(itemList[j]);
-                }
+                liveHeroList[i].AddItem(weaponList[j]);
             }
-            liveHeroList[i].cHp = liveHeroList[i].tHp;
+            List<ItemData> itemList = JsonMapper.ToObject<List<ItemData>>(curHero[i.ToString()].item);
+            for (int j = 0; j < itemList.Count; j++)
+            {
+                liveHeroList[i].AddItem(itemList[j]);
+            }
+            liveHeroList[i].rolePro.cHp = liveHeroList[i].rolePro.tHp;
             liveHeroList[i].SetCurWeapon();
         }
         TemproaryDataUpdate();
@@ -170,7 +170,7 @@ public class HeroManager : QSingleton<HeroManager> {
         for (int i = 0; i < liveHeroList.Count; i++)
         {
             liveHeroList[i].Clear();
-            ResourcesMgr.Instance().PushPool(liveHeroList[i].gameObject, liveHeroList[i].mPrefab);
+            ResourcesMgr.Instance().PushPool(liveHeroList[i].gameObject, liveHeroList[i].rolePro.mPrefab);
         }
         liveHeroList.Clear();
     }
@@ -180,14 +180,16 @@ public class HeroManager : QSingleton<HeroManager> {
     /// </summary>
     public void SaveHeroClear()
     {
+        curHero.Clear();
         for (int i = 0; i < liveHeroList.Count; i++)
         {
-            //相应id的hero保存数据
-            curHero[liveHeroList[i].mID] = liveHeroList[i].SaveData();
-            curHero[liveHeroList[i].mID].item = JsonMapper.ToJson(liveHeroList[i].itemList);
-            curHero[liveHeroList[i].mID].weapon = JsonMapper.ToJson(liveHeroList[i].weaponList);
+            HeroProData hero = liveHeroList[i].rolePro.GetHeroProData();
+            Debug.Log(hero.name + "," + hero.exp);
+            hero.item = JsonMapper.ToJson(liveHeroList[i].itemList);
+            hero.weapon = JsonMapper.ToJson(liveHeroList[i].weaponList);
+            curHero[i.ToString()] = hero;
             liveHeroList[i].Clear();
-            ResourcesMgr.Instance().PushPool(liveHeroList[i].gameObject, liveHeroList[i].mPrefab);
+            ResourcesMgr.Instance().PushPool(liveHeroList[i].gameObject, liveHeroList[i].rolePro.mPrefab);
         }
         liveHeroList.Clear();
     }
@@ -198,11 +200,8 @@ public class HeroManager : QSingleton<HeroManager> {
     public void SaveHeroData()
     {
         ////将清理hero时保存的数据存档并清理list
-        for (int i = 0; i < curHero.Count; i++)
-        {
-            DataManager.Instance().SaveHeroData(curHero[i]);
-        }
-        curHero.Clear();
+        string path = "Data/HeroData_" + GameManager.Instance().curGameIdx.ToString();
+        DataManager.Instance().SaveDicData<HeroProData>(curHero, path);
     }
 
     public void SetHeroRound()
@@ -222,13 +221,16 @@ public class HeroManager : QSingleton<HeroManager> {
         List<int> hero = new List<int>();
         for (int i = 0; i < liveHeroList.Count; i++)
         {
-            if (MainManager.Instance().GetMapNode(liveHeroList[i].mIdx).func == LandManager.RECURE)
+            if (LevelManager.Instance().GetMapNode(liveHeroList[i].mIdx).func == LandManager.RECURE)
             {
-                if(liveHeroList[i].cHp != liveHeroList[i].tHp)
+                if (liveHeroList[i].rolePro.cHp != liveHeroList[i].rolePro.tHp)
                     hero.Add(i);
             }
         }
-        LandManager.Instance().RecureInit(hero);
+        if (hero.Count > 0)
+            LandManager.Instance().RecureInit(hero);
+        else
+            MainManager.Instance().CheckEnd();
     }
 
     #region hero选项
@@ -263,7 +265,6 @@ public class HeroManager : QSingleton<HeroManager> {
     /// </summary>
     private void Occupy()
     {
-        Debug.Log("占领咯");
         UIManager.Instance().CloseUIForms("HeroMenu");
         GameManager.Instance().GameOver(GameManager.SUCCESS);
     }
@@ -310,6 +311,14 @@ public class HeroManager : QSingleton<HeroManager> {
     public bool SetStandby()
     {
         standbyCount++;
+        return IsAllStandby();
+    }
+
+    /// <summary>
+    /// 判断是否全部待机
+    /// </summary>
+    public bool IsAllStandby()
+    {
         if (standbyCount == liveHeroList.Count)
         {
             standbyCount = 0;
@@ -358,7 +367,7 @@ public class HeroManager : QSingleton<HeroManager> {
         for (int i = 0; i < liveHeroList.Count; i++)
         {
             liveHeroList[i].gameObject.SetActive(true);
-            MainManager.Instance().GetMapNode(liveHeroList[i].mIdx).locatedHero = liveHeroList[i];
+            LevelManager.Instance().GetMapNode(liveHeroList[i].mIdx).locatedHero = liveHeroList[i];
             if (liveHeroList[i].heroState == HeroController.HeroState.stop)
             {
                 liveHeroList[i].SetAnimator("bNormal", false);
@@ -372,15 +381,13 @@ public class HeroManager : QSingleton<HeroManager> {
     /// </summary>
     public bool SetDead(int idx)
     {
-        Debug.Log(idx + "," + liveHeroList[idx].mName);
         if (idx >= liveHeroList.Count)
             return false;
-        if (liveHeroList[idx].mName == LEADER)
+        if (liveHeroList[idx].rolePro.mName == LEADER)
             return true;
         else
         {
-            deadHeroList.Add(liveHeroList[idx]);
-            ResourcesMgr.Instance().PushPool(liveHeroList[idx].gameObject, liveHeroList[idx].mPrefab);
+            ResourcesMgr.Instance().PushPool(liveHeroList[idx].gameObject, liveHeroList[idx].rolePro.mPrefab);
             liveHeroList.RemoveAt(idx);
             ResetListIdx();
             return false;
@@ -399,28 +406,21 @@ public class HeroManager : QSingleton<HeroManager> {
     }
 
     /// <summary>
+    /// 删除hero数据
+    /// </summary>
+    public void DeleteHeroFile(int idx)
+    {
+        string path = "Data/HeroData_" + idx;
+        Dictionary<string, HeroProData> list = new Dictionary<string, HeroProData>();
+        DataManager.Instance().SaveDicData<HeroProData>(list, path);
+    }
+
+    /// <summary>
     /// 中断,隐藏hero，记录当前hero保存数据
     /// </summary>
     public void TemporarySave()
     {
-        List<TemporaryHeroData> temp = new List<TemporaryHeroData>();
-        for (int i = 0; i < liveHeroList.Count; i++)
-        {
-            TemporaryHeroData data = new TemporaryHeroData();
-            string hero = JsonMapper.ToJson(liveHeroList[i].SaveData());
-            data.hero = hero;
-            data.pos = liveHeroList[i].mIdx.ToString();
-            if (liveHeroList[i].heroState == HeroController.HeroState.stop)
-                data.state = STANDBY;
-            else
-                data.state = NORMAL;
-            string item = JsonMapper.ToJson(liveHeroList[i].itemList);
-            data.item = item;
-            string weapon = JsonMapper.ToJson(liveHeroList[i].weaponList);
-            data.weapon = weapon;
-            temp.Add(data);
-        }
-        DataManager.Instance().SaveNormalData<TemporaryHeroData>(temp, TEMDATA);
+        TemproaryDataUpdate();
         HeroClear();
         curHero.Clear();
         heroContent.SetActive(false);  
@@ -431,11 +431,12 @@ public class HeroManager : QSingleton<HeroManager> {
     /// </summary>
     public void TemproaryDataUpdate()
     {
-        List<TemporaryHeroData> temp = new List<TemporaryHeroData>();
+        Dictionary<string, TemporaryHeroData> temp = new Dictionary<string, TemporaryHeroData>();
         for (int i = 0; i < liveHeroList.Count; i++)
         {
             TemporaryHeroData data = new TemporaryHeroData();
-            string hero = JsonMapper.ToJson(liveHeroList[i].SaveData());
+            PublicRoleData heroData = liveHeroList[i].rolePro.GetHeroProData();
+            string hero = JsonMapper.ToJson(heroData);
             data.hero = hero;
             data.pos = liveHeroList[i].mIdx.ToString();
             if (liveHeroList[i].heroState == HeroController.HeroState.stop)
@@ -446,9 +447,9 @@ public class HeroManager : QSingleton<HeroManager> {
             data.item = item;
             string weapon = JsonMapper.ToJson(liveHeroList[i].weaponList);
             data.weapon = weapon;
-            temp.Add(data);
+            temp.Add(i.ToString(), data);
         }
-        DataManager.Instance().SaveNormalData<TemporaryHeroData>(temp, TEMDATA);
+        DataManager.Instance().SaveDicData<TemporaryHeroData>(temp, TEMDATA);
     }
 
     /// <summary>
@@ -457,35 +458,37 @@ public class HeroManager : QSingleton<HeroManager> {
     public void Continue()
     {
         heroContent.SetActive(true);
-        Dictionary<int, TemporaryHeroData> heroDic = DataManager.LoadJson<TemporaryHeroData>(TEMDATA);
+        Dictionary<string, TemporaryHeroData> heroDic = DataManager.Load<TemporaryHeroData>(TEMDATA);
         if (heroDic == null)
             return;
-        if (curHero == null)
-            curHero = new Dictionary<int, HeroProData>();
+        curHero = new Dictionary<string, HeroProData>();
+        standbyCount = 0;
         for (int i = 0; i < heroDic.Count; i++)
         {
-            HeroProData data = JsonMapper.ToObject<HeroProData>(heroDic[i].hero);
+            HeroProData data = JsonMapper.ToObject<HeroProData>(heroDic[i.ToString()].hero);
             GameObject hero = ResourcesMgr.Instance().GetPool(data.prefab);
-            hero.transform.position = MainManager.Instance().Idx2Pos2(DataManager.Value(heroDic[i].pos));
+            hero.transform.position = LevelManager.Instance().Idx2Pos2(DataManager.Value(heroDic[i.ToString()].pos));
             hero.transform.SetParent(heroContent.transform);
             liveHeroList.Add(hero.GetComponent<HeroController>());
+            liveHeroList[i].listIdx = i;
             liveHeroList[i].InitData(data);
             liveHeroList[i].Init();
-            if (heroDic[i].state == STANDBY)
+            if (heroDic[i.ToString()].state == STANDBY)
             {
+                standbyCount++;
                 liveHeroList[i].heroState = HeroController.HeroState.stop;
                 liveHeroList[i].SetAnimator("bStandby", true);
                 liveHeroList[i].SetAnimator("bNormal", false);
             }
-            curHero.Add(liveHeroList[i].mID, data);
+            curHero.Add(liveHeroList[i].rolePro.mID.ToString(), data);
             //道具 & 武器
             liveHeroList[i].ClearBag();
-            List<WeaponData> weaponList = JsonMapper.ToObject<List<WeaponData>>(heroDic[i].weapon);
+            List<WeaponData> weaponList = JsonMapper.ToObject<List<WeaponData>>(heroDic[i.ToString()].weapon);
             for (int j = 0; j < weaponList.Count; j++)
             {
                 liveHeroList[i].AddItem(weaponList[j]);
             }
-            List<ItemData> itemList = JsonMapper.ToObject<List<ItemData>>(heroDic[i].item);
+            List<ItemData> itemList = JsonMapper.ToObject<List<ItemData>>(heroDic[i.ToString()].item);
             for (int j = 0; j < itemList.Count; j++)
             {
                 liveHeroList[i].AddItem(itemList[j]);

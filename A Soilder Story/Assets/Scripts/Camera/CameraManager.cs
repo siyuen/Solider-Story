@@ -24,27 +24,29 @@ public class CameraManager : QMonoSingleton<CameraManager> {
     {
         standardWidth = 900;
         standardHeight = 600;
+    }
 
+
+    void Update()
+    {
         deviceWidth = Screen.width;
         deviceHeight = Screen.height;
         if (deviceWidth / deviceHeight > standardWidth / standardHeight)
         {
-            //float width = deviceHeight * (standardWidth / standardHeight);
-            //Debug.Log(width);
-            //Screen.SetResolution((int)width, (int)deviceHeight, false);
+            float width = deviceHeight * (standardWidth / standardHeight);
+            Screen.SetResolution((int)width, (int)deviceHeight, false);
         }
     }
-
     /// <summary>
     /// 获取人物位置比例
     /// </summary>
     public Vector2 GetRolePos(Vector3 pos)
     {
         //在地图中的pos比例
-        MainManager main = MainManager.Instance();
-        int x = main.GetXNode();
+        LevelManager main = LevelManager.Instance();
+        int x = main.mapXNode;
         int width = main.nodeWidth;
-        int y = main.GetYNode();
+        int y = main.mapYNode;
         int height = main.nodeHeight;
         Vector2 v = new Vector2(pos.x / (x * width), pos.y /(y * height));
         return v;

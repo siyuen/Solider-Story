@@ -58,21 +58,21 @@ public class CharacterDataView_2 : UIBase
         {
             curHero = MainManager.Instance().curMouseHero;
             bgImage.sprite = ResourcesMgr.Instance().LoadSprite(MainProperty.HERO_BG);
-            headImage.sprite = ResourcesMgr.Instance().LoadSprite(curHero.sImage);
-            nameText.text = MainManager.Instance().curMouseHero.mName;
-            hpText.text = curHero.cHp.ToString() + "/" + curHero.tHp.ToString();
-            hpSlider.maxValue = curHero.tHp;
-            hpSlider.value = curHero.cHp;
+            headImage.sprite = ResourcesMgr.Instance().LoadSprite(curHero.rolePro.sImage);
+            nameText.text = MainManager.Instance().curMouseHero.rolePro.mName;
+            hpText.text = curHero.rolePro.cHp.ToString() + "/" + curHero.rolePro.tHp.ToString();
+            hpSlider.maxValue = curHero.rolePro.tHp;
+            hpSlider.value = curHero.rolePro.cHp;
         }
         else if (MainManager.Instance().curMouseEnemy)
         {
             curEnemy = MainManager.Instance().curMouseEnemy;
             bgImage.sprite = ResourcesMgr.Instance().LoadSprite(MainProperty.ENEMY_BG);
-            headImage.sprite = ResourcesMgr.Instance().LoadSprite(curEnemy.sImage);
-            nameText.text = curEnemy.mName;
-            hpText.text = curEnemy.cHp.ToString() + "/" + curEnemy.tHp.ToString();
-            hpSlider.maxValue = curEnemy.tHp;
-            hpSlider.value = curEnemy.cHp;
+            headImage.sprite = ResourcesMgr.Instance().LoadSprite(curEnemy.rolePro.sImage);
+            nameText.text = curEnemy.rolePro.mName;
+            hpText.text = curEnemy.rolePro.cHp.ToString() + "/" + curEnemy.rolePro.tHp.ToString();
+            hpSlider.maxValue = curEnemy.rolePro.tHp;
+            hpSlider.value = curEnemy.rolePro.cHp;
 
         }
     }

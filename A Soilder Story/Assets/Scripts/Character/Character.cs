@@ -6,48 +6,26 @@ using QFramework;
 public class Character : MonoBehaviour {
 
     public const int BAGLIMIT = 5;
-    //Data
-    public int mID;                                         //人物Id
-    public string mName;                                    //名字
-    public string mCareer;                                  //职业
-    public int mLevel;                                      //等级
-    public int mExp;                                        //经验
-    public int tHp;                                         //总血量
-    public int cHp;                                         //当前血量
-
-    public int mPower;                                      //力量
-    public int mSkill;                                      //技术
-    public int mSpeed;                                      //速度
-    public int mLucky;                                      //幸运
-    public int pDefense;                                    //守备
-    public int mDefense;                                    //魔防
-    public int mMove;                                       //移动
-    public int mStrength;                                   //体格
-    public string sImage;                                   //小头像路径
-    public string lImage;                                   //大头像路径
-    public string mPrefab;                                  //预制体路径
-    public string fightPrefab;                              //战斗预制体路径
+    public RolePro rolePro;                                 //人物数据
     public WeaponData curWeapon;                            //当前装备的武器
     public int listIdx;                                     //在当前list中的idx
 
     public GameObject fightRole;                      
 
     public float moveSpeed = 30f;                           //移动速度
-    public Vector3 moveDir = Vector3.zero;                  //移动方向
-    public Vector3 lastDir = Vector3.zero;                  //上一步方向
-    public Vector3 curDir = Vector3.zero;                   //当前方向
+    public Vector2 moveDir = Vector3.zero;                  //移动方向
+    public Vector2 lastDir = Vector3.zero;                  //上一步方向
+    public Vector2 curDir = Vector3.zero;                   //当前方向
     public string dirStr;                                   //当前方向的string
-    //public int posIndex;                                    //当前位置index
-    public int moveRange;                                   //移动范围
     public bool bMove;                                      //是否移动
     public bool bSelected;                                  //是否被选中
     public bool bStandby;                                   //是否待机
     public int mIdx;                                        //对应地图块的idx
-    public int attackRange;                                 //攻击范围
     public bool isHero;  
 
     protected InputManager inputInstance;
     protected MainManager mainInstance;
+    protected LevelManager levelInstance;
     public Animator mAnimator;
 
     private Transform mTransform;
@@ -64,6 +42,7 @@ public class Character : MonoBehaviour {
     {
         inputInstance = InputManager.Instance();
         mainInstance = MainManager.Instance();
+        levelInstance = LevelManager.Instance();
         mTransform = this.transform;
         mAnimator = mTransform.GetComponent<Animator>();
     }
@@ -74,29 +53,34 @@ public class Character : MonoBehaviour {
         MoveManager.Instance().HideRoad();
     }
 
+    public virtual void InitData(PublicRoleData data)
+    {
+        rolePro = new RolePro(data);
+    }
+
     /// <summary>
     /// 升级
     /// </summary>
     public virtual void LevelUp(int add = 1)
     {
         CareerManager career = CareerManager.Instance();
-        mLevel += add;
+        rolePro.mLevel += add;
         for (int i = 0; i < add; i++)
         {
-            if (career.LevelUP(mCareer, "hp"))
-                tHp += 1;
-            if (career.LevelUP(mCareer, "power"))
-                mPower += 1;
-            if (career.LevelUP(mCareer, "skill"))
-                mSkill += 1;
-            if (career.LevelUP(mCareer, "speed"))
-                mSpeed += 1;
-            if (career.LevelUP(mCareer, "lucky"))
-                mLucky += 1;
-            if (career.LevelUP(mCareer, "pdefense"))
-                pDefense += 1;
-            if (career.LevelUP(mCareer, "mdefense"))
-                mDefense += 1;
+            if (career.LevelUP(rolePro.mCareer, "hp"))
+                rolePro.tHp += 1;
+            if (career.LevelUP(rolePro.mCareer, "power"))
+                rolePro.mPower += 1;
+            if (career.LevelUP(rolePro.mCareer, "skill"))
+                rolePro.mSkill += 1;
+            if (career.LevelUP(rolePro.mCareer, "speed"))
+                rolePro.mSpeed += 1;
+            if (career.LevelUP(rolePro.mCareer, "lucky"))
+                rolePro.mLucky += 1;
+            if (career.LevelUP(rolePro.mCareer, "pdefense"))
+                rolePro.pDefense += 1;
+            if (career.LevelUP(rolePro.mCareer, "mdefense"))
+                rolePro.mDefense += 1;
         }      
     }
 
@@ -107,7 +91,10 @@ public class Character : MonoBehaviour {
     public virtual void SetCurWeapon()
     {
         if (weaponList.Count == 0)
+        {
+            curWeapon = null;
             return;
+        }
         for (int i = 0; i < weaponList.Count; i++)
         {
             if (WeaponMatching(weaponList[i]))
@@ -167,16 +154,32 @@ public class Character : MonoBehaviour {
     }
 
     /// <summary>
+    /// 更新当前武器（用于交换时）
+    /// </summary>
+    public void ChangeingUpdate()
+    {
+        if (weaponList.Count == 0)
+            curWeapon = null;
+        else
+        {
+            for (int i = 0; i < weaponList.Count; i++)
+            {
+                if (WeaponMatching(weaponList[i]))
+                {
+                    curWeapon = weaponList[i];
+                    return;
+                }
+            }
+            curWeapon = null;
+        }
+    }
+
+    /// <summary>
     /// 判断能否装备这个武器
     /// </summary>
     public virtual bool WeaponMatching(WeaponData weapon)
     {
-        string weapon1 = CareerManager.Instance().keyCareerDic[mCareer].weaponkey1;
-        string weapon2 = CareerManager.Instance().keyCareerDic[mCareer].weaponkey2;
-        if (weapon.key == weapon1 || weapon.key == weapon2)
-            return true;
-        else
-            return false;
+        return CareerManager.Instance().WeaponMatching(rolePro.mCareer, weapon.key);
     }
 
     public virtual bool WeaponMatching(string tag)
@@ -193,8 +196,8 @@ public class Character : MonoBehaviour {
         if (idx == -1)
             return false;
         WeaponData weapon = weaponList[idx];
-        string weapon1 = CareerManager.Instance().keyCareerDic[mCareer].weaponkey1;
-        string weapon2 = CareerManager.Instance().keyCareerDic[mCareer].weaponkey2;
+        string weapon1 = CareerManager.Instance().keyCareerDic[rolePro.mCareer].weaponkey1;
+        string weapon2 = CareerManager.Instance().keyCareerDic[rolePro.mCareer].weaponkey2;
         if (weapon.key == weapon1 || weapon.key == weapon2)
             return true;
         else
@@ -206,14 +209,14 @@ public class Character : MonoBehaviour {
     /// </summary>
     public virtual int CheckIsHeroAround()
     {
-        int col = mainInstance.GetXNode();
-        if (mainInstance.IsInMap(mIdx + 1) && mainInstance.GetMapNode(mIdx + 1).locatedHero)
+        int col = levelInstance.mapXNode;
+        if (levelInstance.IsInMap(mIdx + 1) && levelInstance.GetMapNode(mIdx + 1).locatedHero)
             return (mIdx + 1);
-        else if (mainInstance.IsInMap(mIdx + col) && mainInstance.GetMapNode(mIdx + col).locatedHero)
+        else if (levelInstance.IsInMap(mIdx + col) && levelInstance.GetMapNode(mIdx + col).locatedHero)
             return (mIdx + col);
-        else if (mainInstance.IsInMap(mIdx - 1) && mainInstance.GetMapNode(mIdx - 1).locatedHero)
+        else if (levelInstance.IsInMap(mIdx - 1) && levelInstance.GetMapNode(mIdx - 1).locatedHero)
             return (mIdx - 1);
-        else if (mainInstance.IsInMap(mIdx - col) && mainInstance.GetMapNode(mIdx - col).locatedHero)
+        else if (levelInstance.IsInMap(mIdx - col) && levelInstance.GetMapNode(mIdx - col).locatedHero)
             return (mIdx - col);
         else
             return -1;
@@ -224,14 +227,14 @@ public class Character : MonoBehaviour {
     /// </summary>
     public virtual int CheckIsEnemyAround()
     {
-        int col = mainInstance.GetXNode();
-        if (mainInstance.IsInMap(mIdx + 1) && mainInstance.GetMapNode(mIdx + 1).locatedEnemy)
+        int col = levelInstance.mapXNode;
+        if (levelInstance.IsInMap(mIdx + 1) && levelInstance.GetMapNode(mIdx + 1).locatedEnemy)
             return (mIdx + 1);
-        else if (mainInstance.IsInMap(mIdx + col) && mainInstance.GetMapNode(mIdx + col).locatedEnemy)
+        else if (levelInstance.IsInMap(mIdx + col) && levelInstance.GetMapNode(mIdx + col).locatedEnemy)
             return (mIdx + col);
-        else if (mainInstance.IsInMap(mIdx - 1) && mainInstance.GetMapNode(mIdx - 1).locatedEnemy)
+        else if (levelInstance.IsInMap(mIdx - 1) && levelInstance.GetMapNode(mIdx - 1).locatedEnemy)
             return (mIdx - 1);
-        else if (mainInstance.IsInMap(mIdx - col) && mainInstance.GetMapNode(mIdx - col).locatedEnemy)
+        else if (levelInstance.IsInMap(mIdx - col) && levelInstance.GetMapNode(mIdx - col).locatedEnemy)
             return (mIdx - col);
         return -1;
     }
@@ -241,31 +244,31 @@ public class Character : MonoBehaviour {
     /// </summary>
     public virtual bool CheckIsCrackAround()
     {
-        int col = mainInstance.GetXNode();
-        if (mainInstance.IsInMap(mIdx + 1) && mainInstance.GetMapNode(mIdx + 1).TileType == "Crack")
+        int col = levelInstance.mapXNode;
+        if (levelInstance.IsInMap(mIdx + 1) && levelInstance.GetMapNode(mIdx + 1).TileType == "Crack")
         {
-            if (mainInstance.GetMapNode(mIdx + 1).mLife != 0)
+            if (levelInstance.GetMapNode(mIdx + 1).mLife != 0)
                 return true;
             else
                 return false;
         }
-        else if (mainInstance.IsInMap(mIdx + col) && mainInstance.GetMapNode(mIdx + col).TileType == "Crack")
+        else if (levelInstance.IsInMap(mIdx + col) && levelInstance.GetMapNode(mIdx + col).TileType == "Crack")
         {
-            if (mainInstance.GetMapNode(mIdx + col).mLife != 0)
+            if (levelInstance.GetMapNode(mIdx + col).mLife != 0)
                 return true;
             else
                 return false;
         }
-        else if (mainInstance.IsInMap(mIdx - 1) && mainInstance.GetMapNode(mIdx - 1).TileType == "Crack")
+        else if (levelInstance.IsInMap(mIdx - 1) && levelInstance.GetMapNode(mIdx - 1).TileType == "Crack")
         {
-            if (mainInstance.GetMapNode(mIdx - 1).mLife != 0)
+            if (levelInstance.GetMapNode(mIdx - 1).mLife != 0)
                 return true;
             else
                 return false;
         }
-        else if (mainInstance.IsInMap(mIdx - col) && mainInstance.GetMapNode(mIdx - col).TileType == "Crack")
+        else if (levelInstance.IsInMap(mIdx - col) && levelInstance.GetMapNode(mIdx - col).TileType == "Crack")
         {
-            if (mainInstance.GetMapNode(mIdx - col).mLife != 0)
+            if (levelInstance.GetMapNode(mIdx - col).mLife != 0)
                 return true;
             else
                 return false;
@@ -280,14 +283,14 @@ public class Character : MonoBehaviour {
     {
         //范围一
         List<int> enemy = new List<int>();
-        int col = mainInstance.GetXNode();
-        if (mainInstance.IsInMap(mIdx + 1) && mainInstance.GetMapNode(mIdx + 1).locatedEnemy)
+        int col = levelInstance.mapXNode;
+        if (levelInstance.IsInMap(mIdx + 1) && levelInstance.GetMapNode(mIdx + 1).locatedEnemy)
             enemy.Add(mIdx + 1);
-        if (mainInstance.IsInMap(mIdx + col) && mainInstance.GetMapNode(mIdx + col).locatedEnemy)
+        if (levelInstance.IsInMap(mIdx + col) && levelInstance.GetMapNode(mIdx + col).locatedEnemy)
             enemy.Add(mIdx + col);
-        if (mainInstance.IsInMap(mIdx - 1) && mainInstance.GetMapNode(mIdx - 1).locatedEnemy)
+        if (levelInstance.IsInMap(mIdx - 1) && levelInstance.GetMapNode(mIdx - 1).locatedEnemy)
             enemy.Add(mIdx - 1);
-        if (mainInstance.IsInMap(mIdx - col) && mainInstance.GetMapNode(mIdx - col).locatedEnemy)
+        if (levelInstance.IsInMap(mIdx - col) && levelInstance.GetMapNode(mIdx - col).locatedEnemy)
             enemy.Add(mIdx - col);
         return enemy;
     }
@@ -296,14 +299,14 @@ public class Character : MonoBehaviour {
     {
         //范围一
         List<int> crack = new List<int>();
-        int col = mainInstance.GetXNode();
-        if (mainInstance.IsInMap(mIdx + 1) && mainInstance.GetMapNode(mIdx + 1).TileType == "Crack")
+        int col = levelInstance.mapXNode;
+        if (levelInstance.IsInMap(mIdx + 1) && levelInstance.GetMapNode(mIdx + 1).TileType == "Crack")
             crack.Add(mIdx + 1);
-        if (mainInstance.IsInMap(mIdx + col) && mainInstance.GetMapNode(mIdx + col).TileType == "Crack")
+        if (levelInstance.IsInMap(mIdx + col) && levelInstance.GetMapNode(mIdx + col).TileType == "Crack")
             crack.Add(mIdx + col);
-        if (mainInstance.IsInMap(mIdx - 1) && mainInstance.GetMapNode(mIdx - 1).TileType == "Crack")
+        if (levelInstance.IsInMap(mIdx - 1) && levelInstance.GetMapNode(mIdx - 1).TileType == "Crack")
             crack.Add(mIdx - 1);
-        if (mainInstance.IsInMap(mIdx - col) && mainInstance.GetMapNode(mIdx - col).TileType == "Crack")
+        if (levelInstance.IsInMap(mIdx - col) && levelInstance.GetMapNode(mIdx - col).TileType == "Crack")
             crack.Add(mIdx - col);
         return crack;
     }
@@ -312,14 +315,14 @@ public class Character : MonoBehaviour {
     {
         //范围一
         List<int> hero = new List<int>();
-        int col = mainInstance.GetXNode();
-        if (mainInstance.IsInMap(mIdx + 1) && mainInstance.GetMapNode(mIdx + 1).locatedHero)
+        int col = levelInstance.mapXNode;
+        if (levelInstance.IsInMap(mIdx + 1) && levelInstance.GetMapNode(mIdx + 1).locatedHero)
             hero.Add(mIdx + 1);
-        if (mainInstance.IsInMap(mIdx + col) && mainInstance.GetMapNode(mIdx + col).locatedHero)
+        if (levelInstance.IsInMap(mIdx + col) && levelInstance.GetMapNode(mIdx + col).locatedHero)
             hero.Add(mIdx + col);
-        if (mainInstance.IsInMap(mIdx - 1) && mainInstance.GetMapNode(mIdx - 1).locatedHero)
+        if (levelInstance.IsInMap(mIdx - 1) && levelInstance.GetMapNode(mIdx - 1).locatedHero)
             hero.Add(mIdx - 1);
-        if (mainInstance.IsInMap(mIdx - col) && mainInstance.GetMapNode(mIdx - col).locatedHero)
+        if (levelInstance.IsInMap(mIdx - col) && levelInstance.GetMapNode(mIdx - col).locatedHero)
             hero.Add(mIdx - col);
         return hero;
     }
@@ -329,32 +332,28 @@ public class Character : MonoBehaviour {
     public virtual void Move()
     {
         HideMoveRange();
-        MapNode to = mainInstance.GetMapNode(path[path.Count - 1]);
-        if (Vector3.Distance(mTransform.position, to.transform.position) > 0.5)
+        MapNode to = levelInstance.GetMapNode(path[path.Count - 1]);
+        if (Vector2.Distance(mTransform.position, to.transform.position) > 0.5)
         {
             mTransform.Translate(moveSpeed * moveDir.normalized * Time.deltaTime);
-            ChangeDir();
         }
         else
         {
             mIdx = to.GetID();
             mTransform.position = to.transform.position;
-            //Index = path[path.Count - 1].ID;  //记录当前idx
+            this.transform.position -= new Vector3(0, 0, 1);
             path.RemoveAt(path.Count - 1);
             if (path.Count != 0)
             {
-                to = mainInstance.GetMapNode(path[path.Count - 1]);
+                to = levelInstance.GetMapNode(path[path.Count - 1]);
                 moveDir = to.transform.position - mTransform.position;
+                ChangeDir();
             }
             else
             {
                 bMove = false;
                 moveDir = Vector3.zero;
-
-                //if (levelInstance.playerRound)
-                //    levelInstance.playerRound = false;
-                //else
-                //    levelInstance.playerRound = true;
+                this.transform.position += new Vector3(0, 0, 1);
                 MoveDone();
             }
         }
@@ -366,31 +365,31 @@ public class Character : MonoBehaviour {
         curDir = moveDir.normalized;
         if (lastDir == curDir)
             return;
-        if (curDir == Vector3.up)
+        if (curDir == Vector2.up)
         {
             mAnimator.SetBool(dirStr, false);
             dirStr = "bUp";
             mAnimator.SetBool(dirStr, true);
         }
-        else if (curDir == Vector3.right)
+        else if (curDir == Vector2.right)
         {
             mAnimator.SetBool(dirStr, false);
             dirStr = "bRight";
             mAnimator.SetBool(dirStr, true);
         }
-        else if (curDir == Vector3.down)
+        else if (curDir == Vector2.down)
         {
             mAnimator.SetBool(dirStr, false);
             dirStr = "bDown";
             mAnimator.SetBool(dirStr, true);
         }
-        else if (curDir == Vector3.left)
+        else if (curDir == Vector2.left)
         {
             mAnimator.SetBool(dirStr, false);
             dirStr = "bLeft";
             mAnimator.SetBool(dirStr, true);
         }
-        else if (curDir == Vector3.zero)
+        else if (curDir == Vector2.zero)
         {
             //mAnimator.SetBool(dirStr, false);
         }
@@ -404,7 +403,7 @@ public class Character : MonoBehaviour {
 
     public virtual void MoveTo(int to)
     {
-        if (!mainInstance.GetMapNode(to).canMove)
+        if (!levelInstance.GetMapNode(to).canMove)
             return;
         //原地
         if (to == mIdx)
@@ -413,13 +412,8 @@ public class Character : MonoBehaviour {
             MoveDone();
             return;
         }
-
-        //int from = mainInstance.Pos2Idx(this.transform.position);
-        //DoAStar(from, to);  //所有的移动路径存在colse中
         path.Clear();
-        //int parentIdx = close[close.Count - 1];
-        //MapNode parent = mainInstance.GetMapNode(parentIdx);
-        MapNode parent = mainInstance.GetMapNode(to);
+        MapNode parent = levelInstance.GetMapNode(to);
         while (parent.parentMapNode != null)  //通过父节点计算路径存于path中
         {
             path.Add(parent.GetID());
@@ -428,7 +422,10 @@ public class Character : MonoBehaviour {
         close.Clear();
         if (path.Count == 0)
             return;
-        moveDir = mainInstance.GetMapNode(path[path.Count - 1]).transform.position - mTransform.position; //初始化方向
+        moveDir = levelInstance.GetMapNode(path[path.Count - 1]).transform.position - mTransform.position; //初始化方向
+        //将z坐标前移
+        this.transform.position -= new Vector3(0, 0, 1);
+        ChangeDir();
         bMove = true;
     }
 
@@ -444,11 +441,7 @@ public class Character : MonoBehaviour {
             return;
         }
 
-        //int from = mainInstance.Pos2Idx(this.transform.position);
-        //DoAStar(from, to.GetID());  //所有的移动路径存在colse中
         path.Clear();
-        //int parentIdx = close[close.Count - 1];
-        //MapNode parent = mainInstance.GetMapNode(parentIdx);
         while (to.parentMapNode != null)  //通过父节点计算路径存于path中
         {
             path.Add(to.GetID());
@@ -457,7 +450,9 @@ public class Character : MonoBehaviour {
         close.Clear();
         if (path.Count == 0)
             return;
-        moveDir = mainInstance.GetMapNode(path[path.Count - 1]).transform.position - mTransform.position; //初始化方向
+        moveDir = levelInstance.GetMapNode(path[path.Count - 1]).transform.position - mTransform.position; //初始化方向
+        this.transform.position -= new Vector3(0, 0, 1);
+        ChangeDir();
         bMove = true;
     }
     #endregion
@@ -521,6 +516,7 @@ public class Character : MonoBehaviour {
         {
             for (int i = 0; i < bagList.Count; i++)
             {
+
                 if (tag == bagList[i].tag)
                     bagList.RemoveAt(i);
             }
@@ -533,7 +529,7 @@ public class Character : MonoBehaviour {
                 if (curWeapon != null)
                 {
                     if (tag == curWeapon.tag)
-                        UpdateCurWeapon();
+                        ChangeingUpdate();
                 }
                 return;
             }
@@ -546,29 +542,5 @@ public class Character : MonoBehaviour {
                 return;
             }
         }
-    }
-
-    /// <summary>
-    /// 更新当前武器
-    /// </summary>
-    public void UpdateCurWeapon()
-    {
-        Debug.Log("更新当前武器");
-        if (weaponList.Count == 0)
-            curWeapon = null;
-        else
-        {
-            for (int i = 0; i < weaponList.Count; i++)
-            {
-                if (WeaponMatching(weaponList[i]))
-                {
-                    curWeapon = weaponList[i];
-                    ItemData item = bagList[0];
-                    bagList[0] = curWeapon;
-                    bagList.Add(item);
-                    return;
-                }
-            }
-        }
-    }
+    } 
 }

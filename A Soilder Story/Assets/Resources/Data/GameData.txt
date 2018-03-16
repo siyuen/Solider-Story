@@ -1,1 +1,0 @@
-[{"id":"0","level":"1","curplay":"4","hero":""},{"id":"1","level":"0","curplay":"-1","hero":""},{"id":"2","level":"2","curplay":"-1","hero":""}]

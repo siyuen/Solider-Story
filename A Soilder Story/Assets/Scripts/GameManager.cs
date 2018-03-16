@@ -6,6 +6,7 @@ using UIFramework;
 
 public class GameManager : QSingleton<GameManager>
 {
+    public const string FILEPATH = "Data/GameData";
     public Dictionary<int, GameData> gameDataDic;
     //没在进行的存档/空档
     public const int NULLGAME = -1;
@@ -29,6 +30,7 @@ public class GameManager : QSingleton<GameManager>
         Login,  //登录
         Load,   //读取
         Save,   //保存
+        Delete, //删除
         Play,   //开始
         Success,//成功
         Fail,   //失败
@@ -38,16 +40,11 @@ public class GameManager : QSingleton<GameManager>
 
     private GameManager()
     {
-        gameDataDic = DataManager.LoadJson<GameData>("Data/GameData");
-        if (gameDataDic == null)
+        Dictionary<string, GameData> file = DataManager.Load<GameData>(FILEPATH);
+        gameDataDic = new Dictionary<int,GameData>();
+        for (int i = 0; i < file.Count; i++)
         {
-            //原始数据
-            Dictionary<string, GameData> gameDic = DataManager.Load<GameData>("Data/GameData");
-            gameDataDic = new Dictionary<int, GameData>();
-            for (int i = 0; i < gameDic.Count; i++)
-            {
-                gameDataDic.Add(i, gameDic[i.ToString()]);
-            }
+            gameDataDic.Add(i, file[i.ToString()]);
         }
         bTemporary = false;
         curGameIdx = NULLGAME;
@@ -91,8 +88,43 @@ public class GameManager : QSingleton<GameManager>
             level = 0;
         }
         UIManager.Instance().CloseUIForms("StartGame");
+        ItemManager.Instance().SetTag(DataManager.Value(gameDataDic[idx].itemtag));
         LevelManager.Instance().Init(level);
         SaveGameData();
+    }
+
+    /// <summary>
+    /// 判断是否有存档
+    /// </summary>
+    public bool HaveGameFile()
+    {
+        bool b = false;
+        for (int i = 0; i < gameDataDic.Count; i++)
+        {
+            if (gameDataDic[i].level != NULLGAME.ToString())
+            {
+                b = true;
+                break;
+            }
+        }
+        return b;
+    }
+
+    /// <summary>
+    /// 判断是否有中断记录,最大关卡时不算中断
+    /// </summary>
+    public bool HaveTemporary()
+    {
+        bool b = false;
+        for (int i = 0; i < gameDataDic.Count; i++)
+        {
+            if (gameDataDic[i].curplay != NULLGAME.ToString() && gameDataDic[i].level != MAXLEVEL.ToString())
+            {
+                b = true;
+                break;
+            }
+        }
+        return b;
     }
 
     /// <summary>
@@ -119,6 +151,23 @@ public class GameManager : QSingleton<GameManager>
         }
         HeroManager.Instance().SaveHeroData();
         gameDataDic[idx].level = (LevelManager.Instance().GetCurLevel() + 1).ToString();
+        gameDataDic[idx].itemtag = ItemManager.Instance().GetTag().ToString();
+        SaveGameData();
+    }
+
+    /// <summary>
+    /// 删除存档
+    /// </summary>
+    public void DeleteGame(int idx)
+    {
+        gameDataDic[idx].level = NULLGAME.ToString();
+        gameDataDic[idx].curplay = NULLGAME.ToString();
+        if (curGameIdx == idx)
+        {
+            bTemporary = false;
+            curGameIdx = NULLGAME;
+        }
+        HeroManager.Instance().DeleteHeroFile(idx);
         SaveGameData();
     }
 
@@ -127,12 +176,12 @@ public class GameManager : QSingleton<GameManager>
     /// </summary>
     public void SaveGameData()
     {
-        List<GameData> game = new List<GameData>();
+        Dictionary<string, GameData> game = new Dictionary<string, GameData>();
         for (int i = 0; i < gameDataDic.Count; i++)
         {
-            game.Add(gameDataDic[i]);
+            game.Add(i.ToString(), gameDataDic[i]);
         }
-        DataManager.Instance().SaveGameData(game);
+        DataManager.Instance().SaveDicData<GameData>(game, FILEPATH);
     }
 
     /// <summary>

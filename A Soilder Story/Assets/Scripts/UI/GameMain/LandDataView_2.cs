@@ -8,8 +8,12 @@ using DG.Tweening;
 public class LandDataView_2 : UIBase
 {
     public Text nameText;
+    public GameObject objValue;
     public Text defText;
     public Text avoText;
+    //特殊地形
+    public GameObject objCrack;
+    public Text crackLife;
 
     private RectTransform mTransform;
     private Vector3 showPos;
@@ -33,6 +37,7 @@ public class LandDataView_2 : UIBase
         base.Display();
         mTransform.position = hidePos;
         mTransform.DOMove(showPos, 0.5f);
+        UpdateData();
     }
 
     public override void Hiding()
@@ -44,16 +49,30 @@ public class LandDataView_2 : UIBase
     /// <summary>
     /// 更新mapNode数据
     /// </summary>
-    public void UpdataData(MapNode node)
+    public void UpdateData()
     {
-        nameText.text = node.mName;
-        if (node.mdef == LevelManager.NULLNODE)
-            defText.text = "";
+        MapNode node = MainManager.Instance().curNode;
+        if (node == null)
+            return;
+        if (node.TileType != "Crack")
+        {
+            objValue.SetActive(true);
+            objCrack.SetActive(false);
+            nameText.text = node.mName;
+            if (node.mdef == LevelManager.NULLNODE)
+                defText.text = "";
+            else
+                defText.text = node.mdef.ToString();
+            if (node.mAvo == LevelManager.NULLNODE)
+                avoText.text = "";
+            else
+                avoText.text = node.mAvo.ToString();
+        }
         else
-            defText.text = node.mdef.ToString();
-        if (node.mAvo == LevelManager.NULLNODE)
-            avoText.text = "";
-        else
-            avoText.text = node.mAvo.ToString();
+        {
+            objValue.SetActive(false);
+            objCrack.SetActive(true);
+            crackLife.text = node.mLife.ToString();
+        }
     }
 }

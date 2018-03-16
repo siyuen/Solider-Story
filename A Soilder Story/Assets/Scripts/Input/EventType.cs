@@ -11,8 +11,8 @@ public class EventType
     public static int KEY_DOWNARROW = 4;
     public static int KEY_LEFTARROW = 5;
     public static int KEY_RIGHTARROW = 6;
-    public static int KEY_Z = 7;         //ZXS
-    public static int KEY_X = 8;
-    public static int KEY_S = 9;
+    public static int KEY_Z = 7;         //Z
+    public static int KEY_X = 8;         //x
+    public static int KEY_S = 9;         //s
     #endregion
 }

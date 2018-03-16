@@ -16,15 +16,13 @@ public class DataManager : QMonoSingleton<DataManager>{
 
     public const int MAXVALUE = 100;
 
-    public List<HeroProData> heroDataList = new List<HeroProData>();
-
     #region 数据计算
     /// <summary>
     /// 获取攻击力
     /// </summary>
     public static int GetAttack(Character role, WeaponData weapon)
     {
-        int attack = DataManager.Value(weapon.attack) + role.mPower;
+        int attack = DataManager.Value(weapon.attack) + role.rolePro.mPower;
         return attack;
     }
 
@@ -33,7 +31,7 @@ public class DataManager : QMonoSingleton<DataManager>{
     /// </summary>
     public static int GetHit(Character role, WeaponData weapon)
     {
-        int hit = DataManager.Value(weapon.hit) + role.mSkill * 2 + role.mLucky / 2;
+        int hit = DataManager.Value(weapon.hit) + role.rolePro.mSkill * 2 + role.rolePro.mLucky / 2;
         if (hit > MAXVALUE)
             hit = MAXVALUE;
         return hit;
@@ -44,7 +42,7 @@ public class DataManager : QMonoSingleton<DataManager>{
     /// </summary>
     public static int GetCrt(Character role, WeaponData weapon)
     {
-        int crt = DataManager.Value(weapon.critical) + role.mSkill / 2;
+        int crt = DataManager.Value(weapon.critical) + role.rolePro.mSkill / 2;
         return crt;
     }
 
@@ -53,8 +51,8 @@ public class DataManager : QMonoSingleton<DataManager>{
     /// </summary>
     public static int GetMiss(Character role, WeaponData weapon)
     {
-        int miss = GetAttackSpeed(role, weapon) * 2 + role.mLucky;
-        int node = MainManager.Instance().GetMapNode(role.mIdx).mAvo;
+        int miss = GetAttackSpeed(role, weapon) * 2 + role.rolePro.mLucky;
+        int node = LevelManager.Instance().GetMapNode(role.mIdx).mAvo;
         if (node == LevelManager.NULLNODE)
             node = 0;
         miss += node;
@@ -67,10 +65,10 @@ public class DataManager : QMonoSingleton<DataManager>{
     /// </summary>
     public static int GetDefense(Character role)
     {
-        int node = MainManager.Instance().GetMapNode(role.mIdx).mdef;
+        int node = LevelManager.Instance().GetMapNode(role.mIdx).mdef;
         if(node == LevelManager.NULLNODE)
             node = 0;
-        int def = role.mDefense + node;
+        int def = role.rolePro.mDefense + node;
         return def;
     }
 
@@ -113,7 +111,7 @@ public class DataManager : QMonoSingleton<DataManager>{
     /// </summary>
     public static int GetDamge(Character role1, Character role2)
     {
-        int attack = DataManager.Value(role1.curWeapon.attack) + role1.mPower;
+        int attack = DataManager.Value(role1.curWeapon.attack) + role1.rolePro.mPower;
         int defense = GetDefense(role2);
         int dmg = attack - defense;
         if (role2.curWeapon == null)
@@ -131,7 +129,7 @@ public class DataManager : QMonoSingleton<DataManager>{
     public static int GetFightHit(Character role1, Character role2)
     {
         WeaponData weapon1 = role1.curWeapon;
-        int hit = DataManager.Value(weapon1.hit) + role1.mSkill * 2 + role1.mLucky / 2;
+        int hit = DataManager.Value(weapon1.hit) + role1.rolePro.mSkill * 2 + role1.rolePro.mLucky / 2;
         if (role2.curWeapon != null)
         {
             if (GetWeaponCounter(role1.curWeapon, role2.curWeapon) == 0)
@@ -152,11 +150,11 @@ public class DataManager : QMonoSingleton<DataManager>{
     public static int GetAttackSpeed(Character role, WeaponData weapon)
     {
         if (weapon == null)
-            return role.mSpeed;
-        int speed = DataManager.Value(weapon.weight) - role.mStrength;
+            return role.rolePro.mSpeed;
+        int speed = DataManager.Value(weapon.weight) - role.rolePro.mStrength;
         if (speed < 0)
             speed = 0;
-        speed += role.mSpeed;
+        speed += role.rolePro.mSpeed;
         return speed;
     }
 
@@ -183,7 +181,7 @@ public class DataManager : QMonoSingleton<DataManager>{
             e = 30;
         else
             e = 10;
-        int exp = e + (role2.mLevel - role1.mLevel);
+        int exp = e + (role2.rolePro.mLevel - role1.rolePro.mLevel);
         if (exp < 0)
             exp = 0;
         else if (exp > 100)
@@ -264,164 +262,23 @@ public class DataManager : QMonoSingleton<DataManager>{
     /// </summary>
     public static Dictionary<string, T> Load<T>(string rName)
     {
-        TextAsset s = Resources.Load(rName) as TextAsset;
-        if (!s)
+        string path = Application.streamingAssetsPath + "/" + rName + ".txt";
+        if (!File.Exists(path))
             return null;
-        string strData = s.text;
+        StreamReader s = File.OpenText(path);
+        string strData = s.ReadLine();
         Dictionary<string, T> data = JsonMapper.ToObject<Dictionary<string, T>>(strData);
+        s.Close();
+        s.Dispose();
+#if UNITY_EDITOR
+        AssetDatabase.Refresh();
+#endif
         return data;
-    }
-
-    /// <summary>
-    /// 加载游戏存储的数据
-    /// </summary>
-    public static Dictionary<int, T> LoadJson<T>(string rName)
-    {
-        TextAsset s = Resources.Load(rName) as TextAsset;
-        if (!s)
-            return null;
-        string strData = s.text;
-        List<T> data = JsonMapper.ToObject<List<T>>(strData);
-        Dictionary<int, T> dic = new Dictionary<int, T>();
-        if (data.Count == 0)
-            return null;
-        for (int i = 0; i < data.Count; i++)
-        {
-            dic.Add(i, data[i]);
-        }
-        return dic;
-    }
-
-
-    public void Test()
-    {
-        Dictionary<int, TemporaryHeroData> dic = DataManager.LoadJson<TemporaryHeroData>("Data/TemporaryHeroData");
-        if (dic == null)
-        {
-            Dictionary<string, TemporaryHeroData> test = DataManager.Load<TemporaryHeroData>("Data/TemporaryHeroData");
-            dic.Add(0, test["0"]);
-        }
-        //Dictionary<string, LandData> game = DataManager.Load<LandData>("Data/LandData");
-        //SaveDicData<LandData>(game, "Data/TestData");
-        Dictionary<string, LandData> testDic = DataManager.Load<LandData>("Data/TestData");
-        Debug.Log(testDic.Count);
-        //List<ItemData> save = HeroManager.Instance().liveHeroList[0].itemList;
-        //string saveObject = JsonMapper.ToJson(save);
-        //dic[0].item = saveObject;
-        //List<TemporaryHeroData> data = new List<TemporaryHeroData>();
-        //data.Add(dic[0]);
-        //Debug.Log(data[0].item);
-        //SaveNormalData<TemporaryHeroData>(data, "Data/TemporaryHeroData");
-        //List<ItemData> gameObject = JsonMapper.ToObject<List<ItemData>>(dic[0].item);
-        //Debug.Log(gameObject[0].name);
-    }
-
-    public static void Save()
-    {
-        string tempPath = Application.dataPath + @"/Resources/Data/temp.json";
-        FileInfo fileInfo = new FileInfo(tempPath);
-        //把类转换为Json格式的String 
-        string str = JsonMapper.ToJson(DataManager.Instance().heroDataList);
-        //写入本地 
-        StreamWriter sw = fileInfo.CreateText();
-        sw.WriteLine(str); 
-        sw.Close(); 
-        sw.Dispose(); 
-    }
-
-
-    #region hero数据
-    /// <summary>
-    /// 开启一个存档时需要读取相应数据
-    /// 保存存档时更新数据
-    /// </summary>
-    public void SaveHeroData(HeroProData data)
-    {
-        string game = GameManager.Instance().curGameIdx.ToString();
-        string filePath = Application.dataPath + @"/Resources/Data/HeroData_" + game + ".txt";
-
-        if (!File.Exists(filePath))
-        {
-            heroDataList.Add(data);
-        }
-        else
-        {
-            bool bFind = false;
-            for (int i = 0; i < heroDataList.Count; i++)
-            {
-                HeroProData saveData = heroDataList[i];
-                if (data.id == saveData.id)
-                {
-                    saveData.name = data.name;
-                    saveData.career = data.career;
-                    saveData.level = data.level;
-                    saveData.exp = data.exp;
-                    saveData.thp = data.thp;
-                    saveData.chp = data.chp;
-                    saveData.power = data.power;
-                    saveData.skill = data.skill;
-                    saveData.speed = data.speed;
-                    saveData.lucky = data.lucky;
-                    saveData.pdefense = data.pdefense;
-                    saveData.mdefense = data.mdefense;
-                    saveData.move = data.move;
-                    saveData.strength = data.strength;
-                    bFind = true;
-                    break;
-                }
-            }
-            if (!bFind)
-                heroDataList.Add(data);
-        }
-        FileInfo file = new FileInfo(filePath);
-        StreamWriter sw = file.CreateText();
-
-        string json = JsonMapper.ToJson(heroDataList);
-        sw.WriteLine(json);
-        sw.Close();
-        sw.Dispose();
-#if UNITY_EDITOR
-        AssetDatabase.Refresh();
-#endif
-    }
-    #endregion#endregion
-
-    public void SaveGameData(List<GameData> gameDataList)
-    {
-        string filePath = Application.dataPath + @"/Resources/Data/GameData.txt";
-
-        FileInfo file = new FileInfo(filePath);
-        StreamWriter sw = file.CreateText();
-
-        string json = JsonMapper.ToJson(gameDataList);
-        sw.WriteLine(json);
-        sw.Close();
-        sw.Dispose();
-#if UNITY_EDITOR
-        AssetDatabase.Refresh();
-#endif
-    }
-
-    public void SaveNormalData<T>(List<T> dataList, string path)
-    {
-        string filePath = Application.dataPath + @"/Resources/" + path + ".txt";
-
-        FileInfo file = new FileInfo(filePath);
-        StreamWriter sw = file.CreateText();
-
-        string json = JsonMapper.ToJson(dataList);
-        sw.WriteLine(json);
-        sw.Close();
-        sw.Dispose();
-#if UNITY_EDITOR
-        AssetDatabase.Refresh();
-#endif
     }
 
     public void SaveDicData<T>(Dictionary<string, T> data, string path)
     {
-        string filePath = Application.dataPath + @"/Resources/" + path + ".txt";
-
+        string filePath = Application.streamingAssetsPath + "/" + path + ".txt";
         FileInfo file = new FileInfo(filePath);
         StreamWriter sw = file.CreateText();
 

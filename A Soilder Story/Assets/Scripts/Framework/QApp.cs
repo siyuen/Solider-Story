@@ -38,6 +38,7 @@ public class QApp : QMonoSingleton<QApp>
         {
             // 测试资源加载
             UIManager.Instance().ShowUIForms("Login");
+            
             //UIManager.Instance().ShowUIForms("LevelUp");
             yield return null;
             // 进入正常游戏逻辑
@@ -45,7 +46,6 @@ public class QApp : QMonoSingleton<QApp>
         else if (QApp.Instance().mode == AppMode.QA)
         {
             //GameManager.Instance().StartGame(0);
-            DataManager.Instance().Test();
             yield return null;
         }
         yield return null;

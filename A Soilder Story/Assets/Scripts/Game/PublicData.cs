@@ -176,12 +176,25 @@ public class LevelData
     public string goaltips;
 }
 
+/// <summary>
+/// 记录特殊地形
+/// </summary>
+public class TemporaryLevelData
+{
+    public string id;
+    public string key;
+    public string life;
+}
+
+/// <summary>
+/// 记录存档，当前关卡，是否正在进行
+/// </summary>
 public class GameData
 {
     public string id;
     public string level;
     public string curplay;
-    public string hero;
+    public string itemtag;
 }
 
 public class HeroOptionData

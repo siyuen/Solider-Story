@@ -52,9 +52,9 @@ public class LandManager : QSingleton<LandManager>{
         hero.SetAnimator("bMouse", true);
         hero.SetAnimator("bNormal", false);
         UIManager.Instance().ShowUIForms("UseItem");
-        hero.cHp += 4;
-        if (hero.cHp > hero.tHp)
-            hero.cHp = hero.tHp;
+        hero.rolePro.cHp += 4;
+        if (hero.rolePro.cHp > hero.rolePro.tHp)
+            hero.rolePro.cHp = hero.rolePro.tHp;
         UIManager.Instance().GetUI("UseItem").GetComponent<UseItemView>().UpdateUI("hp");
     }
 
@@ -76,9 +76,9 @@ public class LandManager : QSingleton<LandManager>{
     {
         MainManager.Instance().curEnemy = enemy;
         UIManager.Instance().ShowUIForms("UseItem");
-        enemy.cHp += 4;
-        if (enemy.cHp > enemy.tHp)
-            enemy.cHp = enemy.tHp;
+        enemy.rolePro.cHp += 4;
+        if (enemy.rolePro.cHp > enemy.rolePro.tHp)
+            enemy.rolePro.cHp = enemy.rolePro.tHp;
         UIManager.Instance().GetUI("UseItem").GetComponent<UseItemView>().UpdateUI("hp");
     }
 

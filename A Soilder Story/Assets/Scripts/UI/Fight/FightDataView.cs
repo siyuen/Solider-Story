@@ -66,14 +66,8 @@ public class FightDataView : UIBase
         }
         attackCursor = ResourcesMgr.Instance().GetPool(MainProperty.ATTACKCURSOR_PATH);
         curHero = MainManager.Instance().curHero;
-        //默认右边
-        if (curHero.mAnimator.GetBool("bSelected"))
-        {
-            curHero.SetAnimator("bRight", true);
-            curHero.dirStr = "bRight";
-            curHero.SetAnimator("bSelected", false);
-        }
-        if (MainManager.Instance().Idx2ListPos(curHero.mIdx).x > MainManager.Instance().GetXNode() / 2)
+        curHero.SetAnimator("bSelected", false);
+        if (LevelManager.Instance().Idx2ListPos(curHero.mIdx).x > LevelManager.Instance().mapXNode / 2)
             this.transform.localPosition = LEFTPOS;
         else
             this.transform.localPosition = RIGHTPOS;
@@ -109,9 +103,9 @@ public class FightDataView : UIBase
     {
         //hero
         heroWeapon = curHero.curWeapon;
-        heroWeaponImg.sprite = ResourcesMgr.Instance().LoadSprite(heroWeapon.sprite);  
-        heroName.text = curHero.mName;
-        heroHp.text = curHero.cHp.ToString();
+        heroWeaponImg.sprite = ResourcesMgr.Instance().LoadSprite(heroWeapon.sprite);
+        heroName.text = curHero.rolePro.mName;
+        heroHp.text = curHero.rolePro.cHp.ToString();
         if (curEnemy != null)
         {
             //伤害
@@ -161,8 +155,8 @@ public class FightDataView : UIBase
     {
         //enemy
         enemyWeapon = curEnemy.curWeapon;
-        enemyName.text = curEnemy.mName;
-        enemyHp.text = curEnemy.cHp.ToString();
+        enemyName.text = curEnemy.rolePro.mName;
+        enemyHp.text = curEnemy.rolePro.cHp.ToString();
         if (enemyWeapon != null)
         {
             enemyWeaponImg.sprite = ResourcesMgr.Instance().LoadSprite(enemyWeapon.sprite);
@@ -283,7 +277,7 @@ public class FightDataView : UIBase
         curEnemy = null;
         curNode = null;
         //根据方位调整hero的朝向
-        attackCursor.transform.position = MainManager.Instance().Idx2Pos(enemyList[idx]);
+        attackCursor.transform.position = LevelManager.Instance().Idx2Pos(enemyList[idx]);
         string curDir = curHero.dirStr;
         string dir = MoveManager.Instance().GetDir(curHero.mIdx, enemyList[idx]);
         if (dir == "Left")
@@ -308,10 +302,10 @@ public class FightDataView : UIBase
         }
         curHero.SetAnimator(curDir, false);
 
-        if (MainManager.Instance().GetMapNode(enemyList[idx]).locatedEnemy != null)
-            curEnemy = MainManager.Instance().GetMapNode(enemyList[idx]).locatedEnemy;
-        else if (MainManager.Instance().GetMapNode(enemyList[idx]).TileType == "Crack")
-            curNode = MainManager.Instance().GetMapNode(enemyList[idx]);
+        if (LevelManager.Instance().GetMapNode(enemyList[idx]).locatedEnemy != null)
+            curEnemy = LevelManager.Instance().GetMapNode(enemyList[idx]).locatedEnemy;
+        else if (LevelManager.Instance().GetMapNode(enemyList[idx]).TileType == "Crack")
+            curNode = LevelManager.Instance().GetMapNode(enemyList[idx]);
         SetData();
     }
 

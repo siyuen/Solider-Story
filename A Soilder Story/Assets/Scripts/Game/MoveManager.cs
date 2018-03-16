@@ -41,9 +41,11 @@ public class MoveManager : QSingleton<MoveManager> {
     }
     private List<int> roadIdxList = new List<int>();
     private List<RoadObj> roadObjList = new List<RoadObj>();
+    private LevelManager levelInstance;
 
     private MoveManager()
     {
+        levelInstance = LevelManager.Instance();
         moveRangeObj = new GameObject();
         moveRangeObj.name = "MoveRange";
         roadContent = new GameObject();
@@ -73,28 +75,20 @@ public class MoveManager : QSingleton<MoveManager> {
     }
 
     /// <summary>
-    /// 获取图块
-    /// </summary>
-    public MapNode GetMapNode(int idx)
-    {
-        return mapNodeList[idx];
-    }
-
-    /// <summary>
     /// 获取周围的四个图块idx
     /// </summary>
     public List<int> GetRoundMapNode(int idx)
     {
         List<int> node = new List<int>();
-        int mapXNode = MainManager.Instance().GetXNode();
+        int mapXNode = levelInstance.mapXNode;
         int nowRow = idx / mapXNode;
-        if (MainManager.Instance().IsInMap(idx + 1) && (idx + 1) / mapXNode == nowRow)
+        if (levelInstance.IsInMap(idx + 1) && (idx + 1) / mapXNode == nowRow)
             node.Add(idx + 1);
-        if (MainManager.Instance().IsInMap(idx + mapXNode))
+        if (levelInstance.IsInMap(idx + mapXNode))
             node.Add(idx + mapXNode);
-        if (MainManager.Instance().IsInMap(idx - 1) &&(idx - 1) / mapXNode == nowRow)
+        if (levelInstance.IsInMap(idx - 1) && (idx - 1) / mapXNode == nowRow)
             node.Add(idx - 1);
-        if (MainManager.Instance().IsInMap(idx - mapXNode))
+        if (levelInstance.IsInMap(idx - mapXNode))
             node.Add(idx - mapXNode);   
         return node;
     }
@@ -104,9 +98,9 @@ public class MoveManager : QSingleton<MoveManager> {
     /// </summary>
     public string GetDir(int idx1, int idx2)
     {
-        if (idx1 == idx2 || !MainManager.Instance().IsInMap(idx1) || !MainManager.Instance().IsInMap(idx2))
+        if (idx1 == idx2 || !levelInstance.IsInMap(idx1) || !levelInstance.IsInMap(idx2))
             return null;
-        int mapXNode = MainManager.Instance().GetXNode();
+        int mapXNode = levelInstance.mapXNode;
         int row1 = idx1 / mapXNode;
         int row2 = idx2 / mapXNode;
         int col1 = idx1 % mapXNode;
@@ -176,21 +170,17 @@ public class MoveManager : QSingleton<MoveManager> {
     /// </summary>
     public void DoMoveRange(Vector2 pos, int moveRange, int attackRange, bool enemy = false)
     {
-        int id = MainManager.Instance().Pos2Idx(pos);
+        int id = levelInstance.Pos2Idx(pos);
         mapNodeList[id].bVisited = true;
         rangeQueue.Enqueue(id);
         //能移动到的index
         while (rangeQueue.Count != 0)
         {
             int w = rangeQueue.Dequeue();
-            int mapXNode =  MainManager.Instance().GetXNode();
+            int mapXNode = levelInstance.mapXNode;
             int nowRow = w / mapXNode;
-            //判断走了几步
-            MapNode parent = mapNodeList[w];
-            if (parent.parentMapNode != null)
-                parent = parent.parentMapNode;
 
-            if (MainManager.Instance().IsInMap(w + 1) && !mapNodeList[w + 1].bVisited && (w + 1) / mapXNode == nowRow)  //如果右边节点存在且未被访问
+            if (levelInstance.IsInMap(w + 1) && !mapNodeList[w + 1].bVisited && (w + 1) / mapXNode == nowRow)  //如果右边节点存在且未被访问
             {
                 if (mapNodeList[w].moveValue + mapNodeList[w + 1].nodeValue <= moveRange)  //未超出移动能力
                 {
@@ -209,7 +199,7 @@ public class MoveManager : QSingleton<MoveManager> {
                 else
                     endNodeList.Add(w);
             }
-            if (MainManager.Instance().IsInMap(w + mapXNode) && !mapNodeList[w + mapXNode].bVisited)
+            if (levelInstance.IsInMap(w + mapXNode) && !mapNodeList[w + mapXNode].bVisited)
             {
                 if (mapNodeList[w].moveValue + mapNodeList[w + mapXNode].nodeValue <= moveRange)
                 {
@@ -228,7 +218,7 @@ public class MoveManager : QSingleton<MoveManager> {
                 else
                     endNodeList.Add(w);
             }
-            if (MainManager.Instance().IsInMap(w - 1) && !mapNodeList[w - 1].bVisited && (w - 1) / mapXNode == nowRow)
+            if (levelInstance.IsInMap(w - 1) && !mapNodeList[w - 1].bVisited && (w - 1) / mapXNode == nowRow)
             {
                 if (mapNodeList[w].moveValue + mapNodeList[w - 1].nodeValue <= moveRange)
                 {
@@ -247,7 +237,7 @@ public class MoveManager : QSingleton<MoveManager> {
                 else
                     endNodeList.Add(w);
             }
-            if (MainManager.Instance().IsInMap(w - mapXNode) && !mapNodeList[w - mapXNode].bVisited)
+            if (levelInstance.IsInMap(w - mapXNode) && !mapNodeList[w - mapXNode].bVisited)
             {
                 if (mapNodeList[w].moveValue + mapNodeList[w - mapXNode].nodeValue <= moveRange)
                 {
@@ -357,24 +347,24 @@ public class MoveManager : QSingleton<MoveManager> {
     {
         if (endNodeList.Count == 0)
         {
-            int mapXNode = MainManager.Instance().GetXNode();
+            int mapXNode = levelInstance.mapXNode;
             int nowRow = idx / mapXNode;
-            if (MainManager.Instance().IsInMap(idx + 1) && !mapNodeList[idx + 1].bVisited && (idx + 1) / mapXNode == nowRow)
+            if (levelInstance.IsInMap(idx + 1) && !mapNodeList[idx + 1].bVisited && (idx + 1) / mapXNode == nowRow)
             {
                 if (!attackNode.Contains(idx + 1))
                     attackNode.Add(idx + 1);
             }
-            if (MainManager.Instance().IsInMap(idx + mapXNode) && !mapNodeList[idx + mapXNode].bVisited)
+            if (levelInstance.IsInMap(idx + mapXNode) && !mapNodeList[idx + mapXNode].bVisited)
             {
                 if (!attackNode.Contains(idx + mapXNode))
                     attackNode.Add(idx + mapXNode);
             }
-            if (MainManager.Instance().IsInMap(idx - 1) && !mapNodeList[idx - 1].bVisited && (idx - 1) / mapXNode == nowRow)
+            if (levelInstance.IsInMap(idx - 1) && !mapNodeList[idx - 1].bVisited && (idx - 1) / mapXNode == nowRow)
             {
                 if (!attackNode.Contains(idx - 1))
                     attackNode.Add(idx - 1);
             }
-            if (MainManager.Instance().IsInMap(idx - mapXNode) && !mapNodeList[idx - mapXNode].bVisited)
+            if (levelInstance.IsInMap(idx - mapXNode) && !mapNodeList[idx - mapXNode].bVisited)
             {
                 if (!attackNode.Contains(idx - mapXNode))
                     attackNode.Add(idx - mapXNode);
@@ -384,10 +374,10 @@ public class MoveManager : QSingleton<MoveManager> {
         {
             for (int i = 0; i < endNodeList.Count; i++)
             {
-                int mapXNode = MainManager.Instance().GetXNode();
+                int mapXNode = levelInstance.mapXNode;
                 int id = endNodeList[i];
                 int nowRow = id / mapXNode;
-                if (MainManager.Instance().IsInMap(id + 1) && !mapNodeList[id + 1].bVisited && (id + 1) / mapXNode == nowRow)
+                if (levelInstance.IsInMap(id + 1) && !mapNodeList[id + 1].bVisited && (id + 1) / mapXNode == nowRow)
                 {
                     if (!attackNode.Contains(id + 1))
                     {
@@ -397,7 +387,7 @@ public class MoveManager : QSingleton<MoveManager> {
                             attackHeroList.Add(id + 1);
                     }
                 }
-                if (MainManager.Instance().IsInMap(id + mapXNode) && !mapNodeList[id + mapXNode].bVisited)
+                if (levelInstance.IsInMap(id + mapXNode) && !mapNodeList[id + mapXNode].bVisited)
                 {
                     if (!attackNode.Contains(id + mapXNode))
                     {
@@ -407,7 +397,7 @@ public class MoveManager : QSingleton<MoveManager> {
                             attackHeroList.Add(id + mapXNode);
                     }
                 }
-                if (MainManager.Instance().IsInMap(id - 1) && !mapNodeList[id - 1].bVisited && (id - 1) / mapXNode == nowRow)
+                if (levelInstance.IsInMap(id - 1) && !mapNodeList[id - 1].bVisited && (id - 1) / mapXNode == nowRow)
                 {
                     if (!attackNode.Contains(id - 1))
                     {
@@ -417,7 +407,7 @@ public class MoveManager : QSingleton<MoveManager> {
                             attackHeroList.Add(id - 1);
                     }
                 }
-                if (MainManager.Instance().IsInMap(id - mapXNode) && !mapNodeList[id - mapXNode].bVisited)
+                if (levelInstance.IsInMap(id - mapXNode) && !mapNodeList[id - mapXNode].bVisited)
                 {
                     if (!attackNode.Contains(id - mapXNode))
                     {
@@ -452,7 +442,7 @@ public class MoveManager : QSingleton<MoveManager> {
         if (id == mainInstance.curHero.mIdx)
             return;
         //获取当前路线idx
-        MapNode node = GetMapNode(id);
+        MapNode node = levelInstance.GetMapNode(id);
         while (node.parentMapNode)
         {
             roadIdxList.Add(node.GetID());
@@ -495,11 +485,11 @@ public class MoveManager : QSingleton<MoveManager> {
                 }
                 lastdir = dir;
                 GameObject head = ResourcesMgr.Instance().GetPool(headpath);
-                head.transform.position = mainInstance.Idx2Pos(roadIdxList[j]); 
+                head.transform.position = levelInstance.Idx2Pos(roadIdxList[j]); 
                 head.transform.SetParent(roadContent.transform);
                 roadObjList.Add(new RoadObj(headpath, head));
                 GameObject tail = ResourcesMgr.Instance().GetPool(tailpath);
-                tail.transform.position = mainInstance.Idx2Pos(roadIdxList[j + 1]);
+                tail.transform.position = levelInstance.Idx2Pos(roadIdxList[j + 1]);
                 tail.transform.SetParent(roadContent.transform);
                 roadObjList.Add(new RoadObj(tailpath, tail));
             }
@@ -554,12 +544,12 @@ public class MoveManager : QSingleton<MoveManager> {
                     RoadObj road = roadObjList[roadObjList.Count - 1];
                     ResourcesMgr.Instance().PushPool(road.road, road.path);
                     GameObject head = ResourcesMgr.Instance().GetPool(headpath);
-                    head.transform.position = mainInstance.Idx2Pos(roadIdxList[j]);
+                    head.transform.position = levelInstance.Idx2Pos(roadIdxList[j]);
                     head.transform.SetParent(roadContent.transform);
                     roadObjList[roadObjList.Count - 1] = new RoadObj(headpath, head);
 
                     GameObject tail = ResourcesMgr.Instance().GetPool(tailpath);
-                    tail.transform.position = mainInstance.Idx2Pos(roadIdxList[j + 1]);
+                    tail.transform.position = levelInstance.Idx2Pos(roadIdxList[j + 1]);
                     tail.transform.SetParent(roadContent.transform);
                     roadObjList.Add(new RoadObj(tailpath, tail));
                 }
@@ -570,7 +560,7 @@ public class MoveManager : QSingleton<MoveManager> {
                     else if (dir == 3 || dir == 4)
                         tailpath = MainProperty.ROADBODY_LEFT_PATH;
                     GameObject tail = ResourcesMgr.Instance().GetPool(tailpath);
-                    tail.transform.position = mainInstance.Idx2Pos(roadIdxList[j + 1]);
+                    tail.transform.position = levelInstance.Idx2Pos(roadIdxList[j + 1]);
                     tail.transform.SetParent(roadContent.transform);
                     roadObjList.Add(new RoadObj(tailpath, tail));
                 }

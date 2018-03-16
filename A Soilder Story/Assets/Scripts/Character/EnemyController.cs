@@ -23,7 +23,7 @@ public class EnemyController : Character
 	// Use this for initialization
 	void Start () {
         dirStr = "bNormal";
-        fightRole = ResourcesMgr.Instance().GetPool(fightPrefab);
+        fightRole = ResourcesMgr.Instance().GetPool(rolePro.fightPrefab);
         fightRole.transform.SetParent(EnemyManager.Instance().enemyContent.transform);
         fightRole.SetActive(false);
         isHero = false;
@@ -33,61 +33,14 @@ public class EnemyController : Character
     {
         base.Init();
         //enemyState = EnemyState.normal;
-        bStandby = false;
-        mIdx = mainInstance.Pos2Idx(this.transform.position);
-        mainInstance.GetMapNode(mIdx).locatedEnemy = this;
+        mIdx = levelInstance.Pos2Idx(this.transform.position);
+        levelInstance.GetMapNode(mIdx).locatedEnemy = this;
     }
 
     public void Clear()
     {
-        MainManager.Instance().GetMapNode(mIdx).locatedEnemy = null;
-        ResourcesMgr.Instance().PushPool(fightRole, fightPrefab);
-    }
-
-    public void InitData(EnemyProData data)
-    {
-        mID = DataManager.Value(data.id);
-        mCareer = CareerManager.Instance().key2NameDic[data.career];
-        mLevel = DataManager.Value(data.level);
-        mExp = DataManager.Value(data.exp);
-        mName = HeroManager.Instance().key2NameDic[data.name];
-        tHp = DataManager.Value(data.thp);
-        cHp = DataManager.Value(data.chp);
-        mPower = DataManager.Value(data.power);
-        mSkill = DataManager.Value(data.skill);
-        mSpeed = DataManager.Value(data.speed);
-        mLucky = DataManager.Value(data.lucky);
-        pDefense = DataManager.Value(data.pdefense);
-        mDefense = DataManager.Value(data.mdefense);
-        mMove = DataManager.Value(data.move);
-        mStrength = DataManager.Value(data.strength);
-        sImage = data.simage;
-        lImage = data.limage;
-        mPrefab = data.prefab;
-        fightPrefab = data.fightprefab;
-    }
-
-    /// <summary>
-    /// 保存数据
-    /// </summary>
-    public EnemyProData SaveData()
-    {
-        EnemyProData data = EnemyManager.Instance().enemyList[mID];
-        data.name = HeroManager.Instance().name2KeyDic[mName];
-        data.career = CareerManager.Instance().name2KeyDic[mCareer];
-        data.level = mLevel.ToString();
-        data.exp = mExp.ToString();
-        data.chp = cHp.ToString();
-        data.thp = tHp.ToString();
-        data.power = mPower.ToString();
-        data.skill = mSkill.ToString();
-        data.speed = mSpeed.ToString();
-        data.lucky = mLucky.ToString();
-        data.pdefense = pDefense.ToString();
-        data.mdefense = mDefense.ToString();
-        data.move = mMove.ToString();
-        data.strength = mStrength.ToString();
-        return data;
+        levelInstance.GetMapNode(mIdx).locatedEnemy = null;
+        ResourcesMgr.Instance().PushPool(fightRole, rolePro.fightPrefab);
     }
 
 	// Update is called once per frame
@@ -98,14 +51,14 @@ public class EnemyController : Character
 
     public override void MoveTo(int to)
     {
-        mainInstance.GetMapNode(mIdx).locatedEnemy = null;
+        levelInstance.GetMapNode(mIdx).locatedEnemy = null;
         mainInstance.curMouseEnemy = null;
         base.MoveTo(to);
     }
 
     public override void MoveTo(MapNode to)
     {
-        mainInstance.GetMapNode(mIdx).locatedEnemy = null;
+        levelInstance.GetMapNode(mIdx).locatedEnemy = null;
         mainInstance.curMouseEnemy = null;
         base.MoveTo(to);
     }
@@ -115,6 +68,11 @@ public class EnemyController : Character
     {
         targetIdx = NULLTARGET;
         MainManager.Instance().curEnemy = this;
+        if (curWeapon == null)
+        {
+            Standby();
+            return;
+        }
         //boss不移动只判断周围
         if (move)
         {
@@ -123,18 +81,17 @@ public class EnemyController : Character
             attackHeroList = CheckHero();
             if (attackHeroList.Count > 0)
             {
-                targetIdx = mainInstance.GetMapNode(attackHeroList[0]).GetID();
-                MainManager.Instance().curHero = mainInstance.GetMapNode(targetIdx).locatedHero;
+                targetIdx = levelInstance.GetMapNode(attackHeroList[0]).GetID();
+                MainManager.Instance().curHero = levelInstance.GetMapNode(targetIdx).locatedHero;
                 Attack();
             }
             else
             {
                 //不显示范围，获取周围移动范围内的hero
                 MoveManager.Instance().ReSet();
-                MoveManager.Instance().DoMoveRange(this.transform.position, this.mMove, 1, true);
+                MoveManager.Instance().DoMoveRange(this.transform.position, rolePro.mMove, 1, true);
                 MoveManager.Instance().AddAttackNodeInList(1, mIdx);
                 attackHeroList = MoveManager.Instance().GetAttackHeroList();
-                Debug.Log(mIdx + ",移动范围内：" + attackHeroList.Count);
                 if (attackHeroList.Count > 0)
                 {
                     //判断是否能移动到hero周围的块
@@ -143,37 +100,36 @@ public class EnemyController : Character
                     int min = 100;
                     for (int i = 0; i < attackHeroList.Count; i++)
                     {
-                        if (mainInstance.Idx2IdxDis(mIdx, attackHeroList[i]) < min)
+                        if (levelInstance.Idx2IdxDis(mIdx, attackHeroList[i]) < min)
                         {
                             target = i;
-                            min = mainInstance.Idx2IdxDis(mIdx, attackHeroList[i]);
+                            min = levelInstance.Idx2IdxDis(mIdx, attackHeroList[i]);
                         }
                     }
                     //目标hero的idx
                     targetIdx = attackHeroList[target];
-                    Debug.Log("目标:" + targetIdx);
                     int to = NULLTARGET;
                     //目标hero的周围
                     List<int> node = MoveManager.Instance().GetRoundMapNode(attackHeroList[target]);
+                    //记录enemy到周围节点的距离，算最小节点
+                    int value = 100;
                     for (int i = 0; i < node.Count; i++)
                     {
-                        MapNode m = mainInstance.GetMapNode(node[i]);
+                        MapNode m = levelInstance.GetMapNode(node[i]);
                         //node可以移动到且没有hero
-                        if (m.bVisited && !m.locatedHero)
+                        if (m.bVisited && !m.locatedHero && !m.locatedEnemy)
                         {
-                            //如果存在enemy
-                            if (m.locatedEnemy)
+                            //若距离小于最小值
+                            if (LevelManager.Instance().Idx2IdxDis(mIdx, node[i]) < value)
                             {
-                                if (m.locatedEnemy == this)
-                                    to = node[i];
-                            }
-                            else
                                 to = node[i];
+                                value = LevelManager.Instance().Idx2IdxDis(mIdx, node[i]);
+                            }
                         }
                     }
                     if (to != NULLTARGET)
                     {
-                        MainManager.Instance().curHero = mainInstance.GetMapNode(targetIdx).locatedHero;
+                        MainManager.Instance().curHero = levelInstance.GetMapNode(targetIdx).locatedHero;
                         MoveTo(to);
                     }
                     else
@@ -188,8 +144,8 @@ public class EnemyController : Character
             attackHeroList = CheckHero();
             if (attackHeroList.Count > 0)
             {
-                targetIdx = mainInstance.GetMapNode(attackHeroList[0]).GetID();
-                MainManager.Instance().curHero = mainInstance.GetMapNode(targetIdx).locatedHero;
+                targetIdx = levelInstance.GetMapNode(attackHeroList[0]).GetID();
+                MainManager.Instance().curHero = levelInstance.GetMapNode(targetIdx).locatedHero;
                 Attack();
             }
             else
@@ -205,7 +161,7 @@ public class EnemyController : Character
         if (!bSelected)
         {
             bSelected = true;
-            MoveManager.Instance().ShowMoveRange(this.transform.position, mMove, 1);
+            MoveManager.Instance().ShowMoveRange(this.transform.position, rolePro.mMove, 1);
             mainInstance.HideAllUI();
         }
     }
@@ -223,7 +179,7 @@ public class EnemyController : Character
     public override void MoveDone()
     {
         base.MoveDone();
-        mainInstance.GetMapNode(mIdx).locatedEnemy = this;
+        levelInstance.GetMapNode(mIdx).locatedEnemy = this;
         Attack();
         MoveManager.Instance().ReSet();
     }
@@ -231,7 +187,7 @@ public class EnemyController : Character
     public void Attack()
     {
         attackCursor = ResourcesMgr.Instance().GetPool(MainProperty.ATTACKCURSOR_PATH);
-        attackCursor.transform.position = MainManager.Instance().Idx2Pos(targetIdx);
+        attackCursor.transform.position = levelInstance.Idx2Pos(targetIdx);
         StartCoroutine(DelayToInvoke.DelayToInvokeDo(() => { FightManager.Instance().Init(FightManager.ENEMYROUND); }, 1f));
     }
 
@@ -249,7 +205,7 @@ public class EnemyController : Character
     {
         Clear();
         mainInstance.curEnemy = null;
-        mainInstance.GetMapNode(mIdx).locatedEnemy = null;
+        levelInstance.GetMapNode(mIdx).locatedEnemy = null;
         return EnemyManager.Instance().SetDead(listIdx);
     }
 

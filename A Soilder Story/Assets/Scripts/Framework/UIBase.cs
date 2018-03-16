@@ -26,7 +26,6 @@ namespace UIFramework
             //给按钮注册事件方法
             if (goButton != null)
             {
-                Debug.Log("注册");
                 EventTriggerListener.Get(goButton).onClick += delHandle;
             }
         }
@@ -40,7 +39,6 @@ namespace UIFramework
             //给按钮注册事件方法
             if (goButton != null)
             {
-                Debug.Log("注册");
                 EventTriggerListener.Get(goButton).onEnter += delHandle;
             }
         }

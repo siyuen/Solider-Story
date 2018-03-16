@@ -134,6 +134,19 @@ public class ItemManager : QSingleton<ItemManager> {
     }
 
     /// <summary>
+    /// 获取当前tag
+    /// </summary>
+    public int GetTag()
+    {
+        return tag;
+    }
+
+    public void SetTag(int tag)
+    {
+        this.tag = tag;
+    }
+
+    /// <summary>
     /// 判断道具是否能用
     /// </summary>
     public bool CanUse(string key)
@@ -141,7 +154,7 @@ public class ItemManager : QSingleton<ItemManager> {
         HeroController hero = MainManager.Instance().curHero;
         if (key == "伤药")
         {
-            if (hero.tHp == hero.cHp)
+            if (hero.rolePro.tHp == hero.rolePro.cHp)
                 return false;
             else
                 return true;
@@ -163,16 +176,15 @@ public class ItemManager : QSingleton<ItemManager> {
         {
             if (!CanUse(curItem.name))
                 return;
-            hero.cHp += 10;
-            if (hero.cHp > hero.tHp)
-                hero.cHp = hero.tHp;
+            hero.rolePro.cHp += 10;
+            if (hero.rolePro.cHp > hero.rolePro.tHp)
+                hero.rolePro.cHp = hero.rolePro.tHp;
             UIManager.Instance().GetUI("UseItem").GetComponent<UseItemView>().UpdateUI("hp");
         }
         int dur = DataManager.Value(curItem.durability);
         dur -= 1;
         if (dur == 0)
         {
-            //需要保存文本
             hero.itemList.RemoveAt(idx);
         }
         else
@@ -216,6 +228,7 @@ public class ItemManager : QSingleton<ItemManager> {
         }
         if (idx1 == -1 || idx2 == -1)
             return;
+        //交换bag中的
         ItemData item = hero1.bagList[idx1];
         hero1.bagList[idx1] = hero2.bagList[idx2];
         hero2.bagList[idx2] = item;
@@ -233,6 +246,7 @@ public class ItemManager : QSingleton<ItemManager> {
         }
         if (!weapon1)
         {
+            //道具交换
             for (int i = 0; i < hero1.itemList.Count; i++)
             {
                 if (hero1.itemList[i].tag == tag1)

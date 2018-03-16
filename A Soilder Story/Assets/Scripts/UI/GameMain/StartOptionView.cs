@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UIFramework;
@@ -64,8 +64,9 @@ public class StartOptionView : UIBase
     {
         if (uiState == State.Normal)
         {
-            if (GameManager.Instance().bTemporary)
+            if (GameManager.Instance().HaveTemporary())
             {
+                //如果中断记录为最大关卡不显示继续游戏
                 GameObject btn = ResourcesMgr.Instance().GetPool(MainProperty.OPTION_BUTTON);
                 Text txt = btn.GetComponentInChildren<Text>();
                 txt.text = "继续游戏";
@@ -92,6 +93,18 @@ public class StartOptionView : UIBase
                 objList.Add(btn);
                 childFuncList.Add(StartGame);
             }
+
+            if (GameManager.Instance().HaveGameFile())
+            {
+                GameObject option2 = ResourcesMgr.Instance().GetPool(MainProperty.OPTION_BUTTON);
+                Text text2 = option2.GetComponentInChildren<Text>();
+                text2.text = "删除记录";
+                option2.transform.SetParent(uiContent.transform);
+                option2.transform.localScale = Vector3.one;
+                objList.Add(option2);
+                childFuncList.Add(DeleteGame);
+            }
+
             GameObject option = ResourcesMgr.Instance().GetPool(MainProperty.OPTION_BUTTON);
             Text text = option.GetComponentInChildren<Text>();
             text.text = "操作说明";
@@ -99,6 +112,14 @@ public class StartOptionView : UIBase
             option.transform.localScale = Vector3.one;
             objList.Add(option);
             childFuncList.Add(ExplainOperate);
+
+            GameObject quit = ResourcesMgr.Instance().GetPool(MainProperty.OPTION_BUTTON);
+            Text text1 = quit.GetComponentInChildren<Text>();
+            text1.text = "退出游戏";
+            quit.transform.SetParent(uiContent.transform);
+            quit.transform.localScale = Vector3.one;
+            objList.Add(quit);
+            childFuncList.Add(QuitGame);
         }
     }
 
@@ -214,11 +235,33 @@ public class StartOptionView : UIBase
     }
 
     /// <summary>
+    /// 删除存档
+    /// </summary>
+    private void DeleteGame()
+    {
+        GameManager.Instance().gameState = GameManager.GameState.Delete;
+        UIManager.Instance().CloseUIForms("StartOption");
+        OpenUIForm("StartGame");
+    }
+
+    /// <summary>
     /// 显示操作
     /// </summary>
     private void ExplainOperate()
     {
         uiState = State.Operate;
         operateView.SetActive(true);
+    }
+
+    /// <summary>
+    /// 退出游戏
+    /// </summary>
+    private void QuitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 }

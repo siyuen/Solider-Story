@@ -46,7 +46,7 @@ public class MapNode : MonoBehaviour {
             //有crack的地图先隐藏第二层
             if (func == LandManager.CRACK)
             {
-                LevelManager.Instance().curMap.GetComponent<TiledMap>().SetSecondLand(false);
+                LevelManager.Instance().crackList.Add(id);
                 fightName = instance.keyLandDic[TileType].name2;
                 mLife = DataManager.Value(instance.keyLandDic[TileType].life);
                 maxHp = mLife;

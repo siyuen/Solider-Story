@@ -19,6 +19,7 @@ public class StartGameView : UIBase {
     public const string NODATA = "--  NO   DATA  --";
     public const string SAVETITLE = "记录游戏";
     public const string LOADTITLE = "读取记录的游戏";
+    public const string DELETETITLE = "删除记录";
 
     public Text startTitle;
     public GameObject optionCursor;
@@ -82,12 +83,14 @@ public class StartGameView : UIBase {
     private void InitData()
     {
         GameManager game = GameManager.Instance();
-        if (GameManager.Instance().gameState == GameManager.GameState.Save)
+        if (game.gameState == GameManager.GameState.Save)
             startTitle.text = SAVETITLE;
-        else if (GameManager.Instance().gameState == GameManager.GameState.Load)
+        else if (game.gameState == GameManager.GameState.Load)
             startTitle.text = LOADTITLE;
+        else if (game.gameState == GameManager.GameState.Delete)
+            startTitle.text = DELETETITLE;
         //1.三无 2.有记录
-        if (game.curGameIdx == GameManager.NULLGAME)
+        if (!GameManager.Instance().HaveGameFile())
         {
             for (int i = 0; i < game.gameDataDic.Count; i++)
             {
@@ -101,7 +104,6 @@ public class StartGameView : UIBase {
         }
         else
         {
-            recordObj.SetActive(true);
             //根据相应的level初始化，若无记录则为null，有中断记录的添加tag
             for (int i = 0; i < game.gameDataDic.Count; i++)
             {
@@ -112,8 +114,11 @@ public class StartGameView : UIBase {
                     Text txt = btn.GetComponentInChildren<Text>();
                     txt.text = level + " 章:   " + LevelManager.Instance().levelDic[level.ToString()].name;
                     float y = uiContent.cellSize.y + uiContent.spacing.y;
-                    if (i == GameManager.Instance().curGameIdx)
+                    if (i == GameManager.Instance().curGameIdx && GameManager.Instance().gameDataDic[i].level != GameManager.MAXLEVEL.ToString())
+                    {
+                        recordObj.SetActive(true);
                         recordObj.transform.localPosition = new Vector3(uiContent.cellSize.x / 2 - 40, uiContent.transform.localPosition.y - y * i + 10, 0);
+                    }
                 }
                 else
                 {
@@ -200,45 +205,86 @@ public class StartGameView : UIBase {
 
     private void OnConfirmDown()
     {
+        GameManager game = GameManager.Instance();
         if (uiState == State.Normal)
         {
-            if (GameManager.Instance().curGameIdx == -1)
+            if (game.gameState == GameManager.GameState.Load)
             {
-                UIManager.Instance().CloseUIForms("StartGame");
-                GameManager.Instance().StartGame(cursorIdx);
+                if (game.gameDataDic[cursorIdx].level == GameManager.NULLGAME.ToString())
+                {
+                    UIManager.Instance().CloseUIForms("StartGame");
+                    game.StartGame(cursorIdx);
+                }
+                else
+                {
+                    if (game.gameDataDic[cursorIdx].level != GameManager.MAXLEVEL.ToString())
+                        InitOption();
+                    else
+                    {
+                        uiState = State.Tips;
+                        levelTips.SetActive(true);
+                    }
+                }
             }
-            else
+            else if(game.gameState == GameManager.GameState.Save)
+            {
                 InitOption();
+            }
+            else if (game.gameState == GameManager.GameState.Delete)
+            {
+                if (game.gameDataDic[cursorIdx].level != GameManager.NULLGAME.ToString())
+                    InitOption();
+            }
         }
         else if (uiState == State.Option)
         {
             if (optionIdx == 1)
             {
+                optionIdx = 0;
                 tipsObj.SetActive(false);
                 cursorFinger.SetActive(false);
                 optionObj.SetActive(false);
-                //删除临时存档
-                if (GameManager.Instance().bTemporary)
+                if (GameManager.Instance().gameState == GameManager.GameState.Load || GameManager.Instance().gameState == GameManager.GameState.Save)
                 {
-                    HeroManager.Instance().HeroClear();
-                    EnemyManager.Instance().EnemyClear();
-                    GameManager.Instance().bTemporary = false;
+                    //删除临时存档
+                    if (GameManager.Instance().bTemporary)
+                    {
+                        HeroManager.Instance().HeroClear();
+                        EnemyManager.Instance().EnemyClear();
+                        GameManager.Instance().bTemporary = false;
+                    }
+                    //保存游戏
+                    if (GameManager.Instance().gameState == GameManager.GameState.Save)
+                    {
+                        LevelManager.Instance().Clear();
+                        GameManager.Instance().SaveGame(cursorIdx);
+                        UpdateData();
+                    }
+                    //判断是否达到最大关卡
+                    if (DataManager.Value(GameManager.Instance().gameDataDic[cursorIdx].level) == GameManager.MAXLEVEL)
+                    {
+                        uiState = State.Tips;
+                        levelTips.SetActive(true);
+                        recordObj.SetActive(false);
+                        GameManager.Instance().bTemporary = false;
+                    }
+                    else
+                        GameManager.Instance().StartGame(cursorIdx);
                 }
-                //保存游戏
-                if (GameManager.Instance().gameState == GameManager.GameState.Save)
+                else if (GameManager.Instance().gameState == GameManager.GameState.Delete)
                 {
-                    LevelManager.Instance().Clear();
-                    GameManager.Instance().SaveGame(cursorIdx);
+                    if (cursorIdx == GameManager.Instance().curGameIdx)
+                        recordObj.SetActive(false);
+                    GameManager.Instance().DeleteGame(cursorIdx);
                     UpdateData();
+                    uiState = State.Normal;
+                    //若全空则回到startOption
+                    if (!GameManager.Instance().HaveGameFile())
+                    {
+                        UIManager.Instance().CloseUIForms("StartGame");
+                        OpenUIForm("StartOption");
+                    }
                 }
-                //判断是否达到最大关卡
-                if (DataManager.Value(GameManager.Instance().gameDataDic[cursorIdx].level) == GameManager.MAXLEVEL)
-                {
-                    uiState = State.Tips;
-                    levelTips.SetActive(true);
-                }
-                else
-                    GameManager.Instance().StartGame(cursorIdx);
             }
             else
             {
@@ -266,6 +312,11 @@ public class StartGameView : UIBase {
             option1Text.text = "记录";
             option2Text.text = "取消";
         }
+        else if (GameManager.Instance().gameState == GameManager.GameState.Delete)
+        {
+            option1Text.text = "删除";
+            option2Text.text = "取消";
+        }
         optionObj.SetActive(true);
         cursorFinger.SetActive(true);
         uiState = State.Option;
@@ -277,6 +328,7 @@ public class StartGameView : UIBase {
     {
         if (uiState == State.Normal)
         {
+            GameManager.Instance().gameState = GameManager.GameState.Login;
             UIManager.Instance().CloseUIForms("StartGame");
             OpenUIForm("StartOption");
         }

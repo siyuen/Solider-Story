@@ -58,7 +58,7 @@ public class ItemMenuView : UIBase {
     {
         itemIdx = 0;
         //设置人物头像,有武器时设置武器类型图标
-        heroImage.sprite = ResourcesMgr.Instance().LoadSprite(MainManager.Instance().curHero.lImage);
+        heroImage.sprite = ResourcesMgr.Instance().LoadSprite(MainManager.Instance().curHero.rolePro.lImage);
         if (ItemManager.Instance().curMenu == ItemManager.ITEMENNU)
             AddItem();
         else if (ItemManager.Instance().curMenu == ItemManager.WEAPONMENU)
@@ -185,35 +185,38 @@ public class ItemMenuView : UIBase {
             }
             weaponImg.sprite = ResourcesMgr.Instance().LoadSprite(weaponList[idx].logo);
 
-            //与当前武器相比
-            int curAttack = DataManager.GetAttack(hero, hero.curWeapon);
-            int curHit = DataManager.GetHit(hero, hero.curWeapon);
-            int curCrt = DataManager.GetCrt(hero, hero.curWeapon);
-            int curMiss = DataManager.GetMiss(hero, hero.curWeapon);
-            
-            Vector3 pos = new Vector3(attackText.rectTransform.sizeDelta.x / 2 + 10, 0, 0);
-            if (weaponAttack > curAttack)
-                SetEffect(MainProperty.EFFECT_UP, pos, attackText.rectTransform);
-            else if (weaponAttack < curAttack)
-                SetEffect(MainProperty.EFFECT_DOWN, pos, attackText.rectTransform);
+            if (hero.curWeapon != null)
+            {
+                //与当前武器相比
+                int curAttack = DataManager.GetAttack(hero, hero.curWeapon);
+                int curHit = DataManager.GetHit(hero, hero.curWeapon);
+                int curCrt = DataManager.GetCrt(hero, hero.curWeapon);
+                int curMiss = DataManager.GetMiss(hero, hero.curWeapon);
 
-            pos = new Vector3(hitText.rectTransform.sizeDelta.x / 2 + 10, 0, 0);
-            if (weaponHit > curHit)
-                SetEffect(MainProperty.EFFECT_UP, pos, hitText.rectTransform);
-            else if(weaponHit < curHit)
-                SetEffect(MainProperty.EFFECT_DOWN, pos, hitText.rectTransform);
+                Vector3 pos = new Vector3(attackText.rectTransform.sizeDelta.x / 2 + 10, 0, 0);
+                if (weaponAttack > curAttack)
+                    SetEffect(MainProperty.EFFECT_UP, pos, attackText.rectTransform);
+                else if (weaponAttack < curAttack)
+                    SetEffect(MainProperty.EFFECT_DOWN, pos, attackText.rectTransform);
 
-            pos = new Vector3(crtText.rectTransform.sizeDelta.x / 2 + 10, 0, 0);
-            if (weaponCrt > curCrt)
-                SetEffect(MainProperty.EFFECT_UP, pos, crtText.rectTransform);
-            else if (weaponCrt < curCrt)
-                SetEffect(MainProperty.EFFECT_DOWN, pos, crtText.rectTransform);
+                pos = new Vector3(hitText.rectTransform.sizeDelta.x / 2 + 10, 0, 0);
+                if (weaponHit > curHit)
+                    SetEffect(MainProperty.EFFECT_UP, pos, hitText.rectTransform);
+                else if (weaponHit < curHit)
+                    SetEffect(MainProperty.EFFECT_DOWN, pos, hitText.rectTransform);
 
-            pos = new Vector3(missText.rectTransform.sizeDelta.x / 2 + 10, 0, 0);
-            if (weaponMiss > curMiss)
-                SetEffect(MainProperty.EFFECT_UP, pos, missText.rectTransform);
-            else if (weaponMiss < curMiss)
-                SetEffect(MainProperty.EFFECT_DOWN, pos, missText.rectTransform);
+                pos = new Vector3(crtText.rectTransform.sizeDelta.x / 2 + 10, 0, 0);
+                if (weaponCrt > curCrt)
+                    SetEffect(MainProperty.EFFECT_UP, pos, crtText.rectTransform);
+                else if (weaponCrt < curCrt)
+                    SetEffect(MainProperty.EFFECT_DOWN, pos, crtText.rectTransform);
+
+                pos = new Vector3(missText.rectTransform.sizeDelta.x / 2 + 10, 0, 0);
+                if (weaponMiss > curMiss)
+                    SetEffect(MainProperty.EFFECT_UP, pos, missText.rectTransform);
+                else if (weaponMiss < curMiss)
+                    SetEffect(MainProperty.EFFECT_DOWN, pos, missText.rectTransform);
+            }
         }
         else if(weaponList.Count <= idx && idx < weaponList.Count + itemList.Count)
         {

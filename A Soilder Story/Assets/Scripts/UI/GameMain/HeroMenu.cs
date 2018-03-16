@@ -33,11 +33,11 @@ public class HeroMenu : UIBase
         MainManager main = MainManager.Instance();
         HeroController hero = main.curHero;
         AddOption("待机");
-        if ((hero.CheckIsEnemyAround() != -1 && hero.curWeapon != null) || hero.CheckIsCrackAround())
+        if ((hero.CheckIsEnemyAround() != -1 || hero.CheckIsCrackAround()) && hero.curWeapon != null)
             AddOption("攻击");
         if (hero.bagList.Count > 0)
             AddOption("物品");
-        if (hero.mName == HeroManager.LEADER && main.GetMapNode(hero.mIdx).mName == "大门")
+        if (hero.rolePro.mName == HeroManager.LEADER && LevelManager.Instance().GetMapNode(hero.mIdx).mName == "大门")
             AddOption("占领");
         if (hero.CheckIsHeroAround() != -1 && !hero.bChangeItem)
         {
@@ -45,7 +45,7 @@ public class HeroMenu : UIBase
             bool b = false;
             for (int i = 0; i < list.Count; i++)
             {
-                if (main.GetMapNode(list[i]).locatedHero.bagList.Count != 0)
+                if (LevelManager.Instance().GetMapNode(list[i]).locatedHero.bagList.Count != 0)
                 {
                     b = true;
                     break;
@@ -119,8 +119,11 @@ public class HeroMenu : UIBase
 
     private void OnCancle()
     {
-        UIManager.Instance().CloseUIForms("HeroMenu");
-        MainManager.Instance().curHero.CancelMoveDone();
-        MainManager.Instance().RegisterKeyBoardEvent();
+        if (!MainManager.Instance().curHero.bChangeItem)
+        {
+            UIManager.Instance().CloseUIForms("HeroMenu");
+            MainManager.Instance().curHero.CancelMoveDone();
+            MainManager.Instance().RegisterKeyBoardEvent();
+        }
     }
 }

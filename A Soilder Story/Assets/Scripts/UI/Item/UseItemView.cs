@@ -39,10 +39,10 @@ public class UseItemView : UIBase {
     public void AttackInit(Character role)
     {
         curHero = MainManager.Instance().curHero;
-        roleName.text = curHero.mName;
-        hpValue.text = curHero.cHp.ToString();
-        hpSlider.maxValue = curHero.tHp;
-        hpSlider.value = curHero.cHp;
+        roleName.text = curHero.rolePro.mName;
+        hpValue.text = curHero.rolePro.cHp.ToString();
+        hpSlider.maxValue = curHero.rolePro.tHp;
+        hpSlider.value = curHero.rolePro.cHp;
     }
 
     public void AttackInit(MapNode node)
@@ -59,10 +59,10 @@ public class UseItemView : UIBase {
         if (MainManager.Instance().mainState == MainManager.MainState.UseItem || MainManager.Instance().mainState == MainManager.MainState.CheckLand)
         {
             curHero = MainManager.Instance().curHero;
-            roleName.text = curHero.mName;
-            hpValue.text = curHero.cHp.ToString();
-            hpSlider.maxValue = curHero.tHp;
-            hpSlider.value = curHero.cHp;
+            roleName.text = curHero.rolePro.mName;
+            hpValue.text = curHero.rolePro.cHp.ToString();
+            hpSlider.maxValue = curHero.rolePro.tHp;
+            hpSlider.value = curHero.rolePro.cHp;
 
             Vector2 pos = CameraManager.Instance().GetRolePos(curHero.transform.position);
             if (pos.x < 0.5)
@@ -116,8 +116,8 @@ public class UseItemView : UIBase {
     /// </summary>
     public void UpdateHp()
     {
-        hpValue.text = curHero.cHp.ToString();
-        hpSlider.value = curHero.cHp;
+        hpValue.text = curHero.rolePro.cHp.ToString();
+        hpSlider.value = curHero.rolePro.cHp;
         if (MainManager.Instance().mainState == MainManager.MainState.UseItem)
             StartCoroutine(DelayToInvoke.DelayToInvokeDo(() => { UIManager.Instance().CloseUIForms("UseItem"); }, 1f));
         else if(MainManager.Instance().mainState == MainManager.MainState.CheckLand)

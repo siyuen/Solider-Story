@@ -66,8 +66,8 @@ public class ChangeView : MonoBehaviour {
 
     private void SetData()
     {
-        heroName1.text = hero1.mName;
-        heroImg1.sprite = ResourcesMgr.Instance().LoadSprite(hero1.lImage);
+        heroName1.text = hero1.rolePro.mName;
+        heroImg1.sprite = ResourcesMgr.Instance().LoadSprite(hero1.rolePro.lImage);
         for (int i = 0; i < hero1.bagList.Count; i++)
         {
             GameObject item = ResourcesMgr.Instance().GetPool(MainProperty.ITEM3_PATH);
@@ -100,8 +100,8 @@ public class ChangeView : MonoBehaviour {
             itemList1.Add(item);
         }
 
-        heroName2.text = hero2.mName;
-        heroImg2.sprite = ResourcesMgr.Instance().LoadSprite(hero2.lImage);
+        heroName2.text = hero2.rolePro.mName;
+        heroImg2.sprite = ResourcesMgr.Instance().LoadSprite(hero2.rolePro.lImage);
         for (int i = 0; i < hero2.bagList.Count; i++)
         {
             GameObject item = ResourcesMgr.Instance().GetPool(MainProperty.ITEM3_PATH);
@@ -226,6 +226,7 @@ public class ChangeView : MonoBehaviour {
                     //判断是交换还是给予
                     if (cursorIdx >= itemList1.Count)
                     {
+                        //给予,判断是道具还是武器
                         bool b = false;
                         for (int i = 0; i < hero2.weaponList.Count; i++)
                         {
