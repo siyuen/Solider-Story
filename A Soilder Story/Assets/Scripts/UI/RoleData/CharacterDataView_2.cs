@@ -20,9 +20,6 @@ public class CharacterDataView_2 : UIBase
     private Vector3 showPos;
     //显示需要移动的pos
     private float offset;
-    //role
-    private HeroController curHero;
-    private EnemyController curEnemy;
 
     void Awake()
     {
@@ -38,6 +35,7 @@ public class CharacterDataView_2 : UIBase
 
     public override void Display()
     {
+        MessageCenter.Instance().AddListener(EventType.UPDATEROLEUI, SetData);
         base.Display();
         mTransform.position = hidePos;
         this.transform.DOMove(showPos, 0.5f);
@@ -45,6 +43,7 @@ public class CharacterDataView_2 : UIBase
 
     public override void Hiding()
     {
+        MessageCenter.Instance().RemoveListener(EventType.UPDATEROLEUI, SetData);
         this.transform.DOMove(hidePos, 0.5f);
         base.Hiding();
     }
@@ -52,28 +51,18 @@ public class CharacterDataView_2 : UIBase
     /// <summary>
     /// 设置数据
     /// </summary>
-    public void SetData()
+    public void SetData(MessageEvent e)
     {
-        if (MainManager.Instance().curMouseHero)
-        {
-            curHero = MainManager.Instance().curMouseHero;
+        UIRoleData data = (UIRoleData)e.Data;
+        Character role = data.role;
+        if (role.isHero)
             bgImage.sprite = ResourcesMgr.Instance().LoadSprite(MainProperty.HERO_BG);
-            headImage.sprite = ResourcesMgr.Instance().LoadSprite(curHero.rolePro.sImage);
-            nameText.text = MainManager.Instance().curMouseHero.rolePro.mName;
-            hpText.text = curHero.rolePro.cHp.ToString() + "/" + curHero.rolePro.tHp.ToString();
-            hpSlider.maxValue = curHero.rolePro.tHp;
-            hpSlider.value = curHero.rolePro.cHp;
-        }
-        else if (MainManager.Instance().curMouseEnemy)
-        {
-            curEnemy = MainManager.Instance().curMouseEnemy;
+        else
             bgImage.sprite = ResourcesMgr.Instance().LoadSprite(MainProperty.ENEMY_BG);
-            headImage.sprite = ResourcesMgr.Instance().LoadSprite(curEnemy.rolePro.sImage);
-            nameText.text = curEnemy.rolePro.mName;
-            hpText.text = curEnemy.rolePro.cHp.ToString() + "/" + curEnemy.rolePro.tHp.ToString();
-            hpSlider.maxValue = curEnemy.rolePro.tHp;
-            hpSlider.value = curEnemy.rolePro.cHp;
-
-        }
+        headImage.sprite = ResourcesMgr.Instance().LoadSprite(role.rolePro.sImage);
+        nameText.text = role.rolePro.mName;
+        hpText.text = role.rolePro.cHp.ToString() + "/" + role.rolePro.tHp.ToString();
+        hpSlider.maxValue = role.rolePro.tHp;
+        hpSlider.value = role.rolePro.cHp;
     }
 }

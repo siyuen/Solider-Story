@@ -33,17 +33,15 @@ public class StoryView : UIBase
         Debug.Log(path);
         bgImage.sprite = ResourcesMgr.Instance().LoadSprite(path);
 
-        InputManager.Instance().RegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().RegisterKeyDownEvent(OnConfirmDown, EventType.KEY_X);
+        RegisterKeyBoardEvent();
     }
 
     private void Clear()
     {
-        InputManager.Instance().UnRegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnConfirmDown, EventType.KEY_X);
+        UnRegisterKeyBoardEvent();
     }
 
-    private void OnConfirmDown()
+    public override void OnConfirmDown()
     {
         GameManager.Instance().gameState = GameManager.GameState.Save;
         UIManager.Instance().CloseUIForms("Story");

@@ -79,7 +79,7 @@ public class EnemyManager : QSingleton<EnemyManager> {
             EnemyProData enemy = CloneEnemyData(enemyDic[enemyIdxList[i].ToString()]);
             keyEnemyDic.Add(i, CloneEnemyData(enemy));
         }
-        for (int i = 0; i < enemyIdxList.Count; i++)
+        for (int i = 0; i < 1; i++)
         {
             GameObject enemy = ResourcesMgr.Instance().GetPool(keyEnemyDic[i].prefab);
             enemy.transform.position = LevelManager.Instance().Idx2Pos2(enemyPosList[i]);
@@ -91,7 +91,7 @@ public class EnemyManager : QSingleton<EnemyManager> {
             curEnemyList[i].listIdx = i;
             //设置武器(设置enemy武器是只有一个，以后再改)
             WeaponData weapon = ItemManager.Instance().CloneWeapon(enemyWeaponList[i]);
-            curEnemyList[i].weaponList.Add(weapon);
+            curEnemyList[i].AddWeapon(weapon);
             //设置等级
             if (curEnemyList[i].rolePro.mLevel < enemyLevelList[i])
             {
@@ -112,6 +112,16 @@ public class EnemyManager : QSingleton<EnemyManager> {
             curEnemyList[i].SetCurWeapon();
         }
         TemproaryDataUpdate();
+        MessageCenter.Instance().AddListener(EventType.SELECTENEMY, SelectEnemyEvent);
+    }
+
+    /// <summary>
+    /// 选择Enemy事件
+    /// </summary>
+    public void SelectEnemyEvent(MessageEvent e)
+    {
+        SelectRoleData data = (SelectRoleData)e.Data;
+        curEnemyList[data.id].Selected();
     }
 
     public void EnemyClear()
@@ -127,6 +137,7 @@ public class EnemyManager : QSingleton<EnemyManager> {
             ResourcesMgr.Instance().PushPool(curEnemyList[i].gameObject, curEnemyList[i].rolePro.mPrefab);
         }
         curEnemyList.Clear();
+        MessageCenter.Instance().RemoveListener(EventType.SELECTENEMY, SelectEnemyEvent);
     }
 
     /// <summary>
@@ -186,7 +197,7 @@ public class EnemyManager : QSingleton<EnemyManager> {
         {
             curEnemyList[i].gameObject.SetActive(true);
             LevelManager.Instance().GetMapNode(curEnemyList[i].mIdx).locatedEnemy = curEnemyList[i];
-            if (curEnemyList[i].bStandby)
+            if (curEnemyList[i].enemyState == EnemyController.EnemyState.stop)
             {
                 curEnemyList[i].SetAnimator("bNormal", false);
                 curEnemyList[i].SetAnimator("bStandby", true);
@@ -307,5 +318,6 @@ public class EnemyManager : QSingleton<EnemyManager> {
             }
             curEnemyList[i].SetCurWeapon();
         }
+        MessageCenter.Instance().AddListener(EventType.SELECTENEMY, SelectEnemyEvent);
     }
 }

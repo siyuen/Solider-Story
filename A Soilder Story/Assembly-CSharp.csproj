@@ -48,12 +48,22 @@
   <ItemGroup>
      <Compile Include="Assets\Scripts\Camera\CameraManager.cs" />
      <Compile Include="Assets\Scripts\Character\Character.cs" />
+     <Compile Include="Assets\Scripts\Character\CharacterBag.cs" />
+     <Compile Include="Assets\Scripts\Character\CharacterMove.cs" />
      <Compile Include="Assets\Scripts\Character\EnemyController.cs" />
      <Compile Include="Assets\Scripts\Character\EnemyManager.cs" />
      <Compile Include="Assets\Scripts\Character\HeroController.cs" />
      <Compile Include="Assets\Scripts\Character\HeroManager.cs" />
+     <Compile Include="Assets\Scripts\Character\HeroOption.cs" />
      <Compile Include="Assets\Scripts\Character\RolePro.cs" />
      <Compile Include="Assets\Scripts\Config\SysDefine.cs" />
+     <Compile Include="Assets\Scripts\Event\EventTriggerListener.cs" />
+     <Compile Include="Assets\Scripts\Event\EventType.cs" />
+     <Compile Include="Assets\Scripts\Event\InputManager.cs" />
+     <Compile Include="Assets\Scripts\Event\MessageCenter.cs" />
+     <Compile Include="Assets\Scripts\Event\MessageEvent.cs" />
+     <Compile Include="Assets\Scripts\Event\MsgEventData.cs" />
+     <Compile Include="Assets\Scripts\Event\PlayerClickArgs.cs" />
      <Compile Include="Assets\Scripts\Framework\QApp.cs" />
      <Compile Include="Assets\Scripts\Framework\QFramework.cs" />
      <Compile Include="Assets\Scripts\Framework\UIBase.cs" />
@@ -72,10 +82,6 @@
      <Compile Include="Assets\Scripts\Helps\ResourcesMgr.cs" />
      <Compile Include="Assets\Scripts\Helps\UIMaskMgr.cs" />
      <Compile Include="Assets\Scripts\Helps\UnityHelper.cs" />
-     <Compile Include="Assets\Scripts\Input\EventTriggerListener.cs" />
-     <Compile Include="Assets\Scripts\Input\EventType.cs" />
-     <Compile Include="Assets\Scripts\Input\InputManager.cs" />
-     <Compile Include="Assets\Scripts\Input\PlayerClickArgs.cs" />
      <Compile Include="Assets\Scripts\Map\LandManager.cs" />
      <Compile Include="Assets\Scripts\Map\MapNode.cs" />
      <Compile Include="Assets\Scripts\UI\EffectManager.cs" />
@@ -165,9 +171,6 @@
      <None Include="Assets\Tiled2Unity\Imported\_ReadMe.txt" />
      <None Include="Assets\StreamingAssets\Data\TemporaryEnemyData.txt" />
      <None Include="Assets\Tiled2Unity\Meshes\_ReadMe.txt" />
- <Reference Include="UnityEngine.UI">
- <HintPath>E:/SiYuen/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
- </Reference>
  <Reference Include="UnityEngine.Networking">
  <HintPath>E:/SiYuen/Unity/Editor/Data/UnityExtensions/Unity/Networking/UnityEngine.Networking.dll</HintPath>
  </Reference>
@@ -185,6 +188,9 @@
  </Reference>
  <Reference Include="UnityEngine.VR">
  <HintPath>E:/SiYuen/Unity/Editor/Data/UnityExtensions/Unity/UnityVR/RuntimeEditor/UnityEngine.VR.dll</HintPath>
+ </Reference>
+ <Reference Include="UnityEngine.UI">
+ <HintPath>E:/SiYuen/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>
  <Reference Include="LitJson">
  <HintPath>E:/SiYuen/Github/Solider-Story/A Soilder Story/Assets/Plugins/LitJson.dll</HintPath>

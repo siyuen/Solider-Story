@@ -31,7 +31,7 @@ public class CameraManager : QMonoSingleton<CameraManager> {
     {
         deviceWidth = Screen.width;
         deviceHeight = Screen.height;
-        if (deviceWidth / deviceHeight > standardWidth / standardHeight)
+        if (Math.Abs(deviceWidth / deviceHeight - standardWidth / standardHeight) > 0.05f)
         {
             float width = deviceHeight * (standardWidth / standardHeight);
             Screen.SetResolution((int)width, (int)deviceHeight, false);

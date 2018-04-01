@@ -65,7 +65,7 @@ public class DataManager : QMonoSingleton<DataManager>{
     /// </summary>
     public static int GetDefense(Character role)
     {
-        int node = LevelManager.Instance().GetMapNode(role.mIdx).mdef;
+        int node = LevelManager.Instance().GetMapNode(role.mIdx).mDef;
         if(node == LevelManager.NULLNODE)
             node = 0;
         int def = role.rolePro.mDefense + node;

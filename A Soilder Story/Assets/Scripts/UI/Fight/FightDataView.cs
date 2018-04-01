@@ -75,13 +75,13 @@ public class FightDataView : UIBase
         SetCursor(idx);
         //MoveManager.Instance().ShowAttackRange();
 
-        RegisterEvent();
+        RegisterKeyBoardEvent();
     }
 
     private void Clear()
     {
         ResourcesMgr.Instance().PushPool(attackCursor, MainProperty.ATTACKCURSOR_PATH);
-        UnRegisterEvent();
+        UnRegisterKeyBoardEvent();
         EffectManager.Instance().Clear();
         enemyList.Clear();
         curNode = null;
@@ -213,34 +213,7 @@ public class FightDataView : UIBase
         enemyCrt.text = "--";
     }
 
-    /// <summary>
-    /// 注册事件，选择敌人；如果范围内敌人不止一个则注册转换事件
-    /// </summary>
-    public void RegisterEvent()
-    {
-        InputManager.Instance().RegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().RegisterKeyDownEvent(OnCancelDown, EventType.KEY_X);
-        //大于一个敌人
-        if (enemyList.Count > 1)
-        {
-            InputManager.Instance().RegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_UPARROW);
-            InputManager.Instance().RegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_DOWNARROW);
-            InputManager.Instance().RegisterKeyDownEvent(OnLeftArrowDown, EventType.KEY_LEFTARROW);
-            InputManager.Instance().RegisterKeyDownEvent(OnRightArrowDown, EventType.KEY_RIGHTARROW);
-        }
-    }
-
-    private void UnRegisterEvent()
-    {
-        InputManager.Instance().UnRegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_UPARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_DOWNARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnLeftArrowDown, EventType.KEY_LEFTARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnRightArrowDown, EventType.KEY_RIGHTARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnCancelDown, EventType.KEY_X);
-    }
-
-    private void OnUpArrowDown()
+    public override void OnUpArrowDown()
     {
         idx -= 1;
         if (idx < 0)
@@ -248,7 +221,7 @@ public class FightDataView : UIBase
         SetCursor(idx);
     }
 
-    private void OnDownArrowDown()
+    public override void OnDownArrowDown()
     {
         idx += 1;
         if (idx >= enemyList.Count)
@@ -256,7 +229,7 @@ public class FightDataView : UIBase
         SetCursor(idx);
     }
 
-    private void OnLeftArrowDown()
+    public override void OnLeftArrowDown()
     {
         idx -= 1;
         if (idx < 0)
@@ -264,7 +237,7 @@ public class FightDataView : UIBase
         SetCursor(idx);
     }
 
-    private void OnRightArrowDown()
+    public override void OnRightArrowDown()
     {
         idx += 1;
         if (idx >= enemyList.Count)
@@ -312,7 +285,7 @@ public class FightDataView : UIBase
     /// <summary>
     /// 确定选择的敌人，进入战斗主界面
     /// </summary>
-    private void OnConfirmDown()
+    public override void OnConfirmDown()
     {
         MoveManager.Instance().HideAttackRange();
         if (curEnemy != null)
@@ -332,7 +305,7 @@ public class FightDataView : UIBase
     /// <summary>
     /// 回退到选择武器界面
     /// </summary>
-    private void OnCancelDown()
+    public override void OnCancelDown()
     {
         MainManager.Instance().curEnemy = null;
         UIManager.Instance().CloseUIForms("FightData");

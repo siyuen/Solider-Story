@@ -9,7 +9,7 @@ public class HeroController : Character
     public enum HeroState
     {
         normal,
-        select,
+        selectd,
         stop,
         dead,
     }
@@ -17,14 +17,15 @@ public class HeroController : Character
     public bool bChangeItem;
     //移动的起点
     private int fromIdx;
+
+    private UpdateCurHero curHero = new UpdateCurHero();
     // Use this for initialization
     void Start()
     {
-        dirStr = "bNormal";
         fightRole = ResourcesMgr.Instance().GetPool(rolePro.fightPrefab);
         fightRole.transform.SetParent(HeroManager.Instance().heroContent.transform);
         fightRole.SetActive(false);
-        isHero = true;
+        curHero.hero = this;
     }
 
     public override void Init()
@@ -32,12 +33,16 @@ public class HeroController : Character
         base.Init();
 
         heroState = HeroState.normal;
-        bSelected = false;
-        bStandby = false;
-        bMove = false;
         bChangeItem = false;
         mIdx = levelInstance.Pos2Idx(this.transform.position);
         levelInstance.GetMapNode(mIdx).locatedHero = this;
+    }
+
+    public override void InitData(PublicRoleData data)
+    {
+        base.InitData(data);
+        isHero = true;
+        
     }
 
     public void Clear()
@@ -46,83 +51,23 @@ public class HeroController : Character
         ResourcesMgr.Instance().PushPool(fightRole, rolePro.fightPrefab);
     }
 
-    public void SetCurWeapon(int idx)
-    {
-        if (idx >= weaponList.Count || idx < 0)
-            return;
-        if (!WeaponMatching(weaponList[idx]))
-            return;
-        if (curWeapon.tag == weaponList[idx].tag)
-            return;
-        WeaponData weapon = weaponList[idx];
-        if (weapon.tag == curWeapon.tag)
-            return;
-        curWeapon = null;
-        GiveUpItem(weaponList[idx].tag);
-        bagList.Insert(0, weapon);
-        weaponList.Insert(0, weapon);
-        curWeapon = weaponList[0];
-    }
-
-    public void SetCurWeapon(string tag)
-    {
-        if(curWeapon != null && curWeapon.tag == tag)
-            return;
-        for (int i = 0; i < weaponList.Count; i++)
-        {
-            if (weaponList[i].tag == tag && WeaponMatching(weaponList[i]))
-            {
-                //设为当前武器，并且将当前武器放置第一位
-                WeaponData weapon = weaponList[i];
-                //从bag跟wepaon中清除
-                GiveUpItem(tag);
-                //插入第一位
-                bagList.Insert(0, weapon);
-                weaponList.Insert(0, weapon);
-                curWeapon = weaponList[0];
-                return;
-            }
-        }
-        curWeapon = null;
-    }
-
-    public void ClearBag()
-    {
-        bagList.Clear();
-        weaponList.Clear();
-        itemList.Clear();
-    }
-    // Update is called once per frame
-    void Update()
-    {
-        if (bMove)
-            Move();
-    }
-
-    public override void MoveTo(int to)
+    public void MoveTo(int to)
     {
         levelInstance.GetMapNode(mIdx).locatedHero = null;
-        mainInstance.curMouseHero = null;
-        base.MoveTo(to);
+        SetAnimator("bSelected", false);
+        roleMove.MoveTo(to);
     }
 
-    public override void MoveTo(MapNode to)
+    public void MoveTo(MapNode to)
     {
         levelInstance.GetMapNode(mIdx).locatedHero = null;
-        mainInstance.curMouseHero = null;
-        base.MoveTo(to);
-    }
-
-    public override void Move()
-    {
-        mAnimator.SetBool("bSelected", false);
-        base.Move();
+        SetAnimator("bSelected", false);
+        roleMove.MoveTo(to);
     }
 
     public override void MoveDone()
     {
-        base.MoveDone();
-        heroState = HeroState.select;
+        heroState = HeroState.selectd;
         levelInstance.GetMapNode(mIdx).locatedHero = this;
         UIManager.Instance().ShowUIForms("HeroMenu");
     }
@@ -134,22 +79,10 @@ public class HeroController : Character
         mAnimator.SetBool("bMouse", false);
         mAnimator.SetBool("bNormal", false);
         heroState = HeroState.stop;
-        mainInstance.curHero = null;
-        //直接结束回合需要先隐藏
-        mainInstance.HideAllUI();
         if (HeroManager.Instance().SetStandby())
-        {
-            mainInstance.UnRegisterKeyBoradEvent();
-            mainInstance.SetCursorActive(false);
-            UIManager.Instance().ShowUIForms("Round");
-        }
+            MessageCenter.Instance().DispatchEvent(new MessageEvent(EventType.UPDATEROUND));
         else
-        {
-            mainInstance.SetCursorActive(true);
-            mainInstance.CursorUpdate();
-            mainInstance.ShowAllUI();
-            mainInstance.RegisterKeyBoardEvent();
-        }
+            MessageCenter.Instance().DispatchEvent(new MessageEvent(EventType.HEROSTANDBY));
     }
 
     /// <summary>
@@ -170,17 +103,14 @@ public class HeroController : Character
     {
         if (heroState != HeroState.normal)
             return;
-        if (!bSelected)
-        {
-            mainInstance.curHero = this;
-            bSelected = true;
-            fromIdx = mIdx;
-            SetAnimator("bSelected", bSelected);
-            SetAnimator("bNormal", false);
-            SetAnimator("bMouse", false);
-            MoveManager.Instance().ShowMoveRange(this.transform.position, rolePro.mMove, 1);
-            mainInstance.HideAllUI();
-        }
+        MessageCenter.Instance().DispatchEvent(new MessageEvent(EventType.UPDATECURHERO, curHero));
+        heroState = HeroState.selectd;
+        fromIdx = mIdx;
+        SetAnimator("bSelected", true);
+        SetAnimator("bNormal", false);
+        SetAnimator("bMouse", false);
+        MoveManager.Instance().ShowMoveRange(this.transform.position, rolePro.mMove, 1);
+       
     }
 
     public override void LevelUp(int add = 1)
@@ -189,7 +119,7 @@ public class HeroController : Character
         base.LevelUp(add);
         LevelUpView view = UIManager.Instance().GetUI("LevelUp").GetComponent<LevelUpView>();
         view.LevelUp();
-        rolePro.mExp -= 100;
+        rolePro.SetProValue(RolePro.PRO_EXP, 0);
     }
 
     /// <summary>
@@ -198,8 +128,7 @@ public class HeroController : Character
     public void CancelSelected()
     {
         heroState = HeroState.normal;
-        bSelected = false;
-        SetAnimator("bSelected", bSelected);
+        SetAnimator("bSelected", false);
         SetAnimator("bNormal", true);
         mIdx = fromIdx;
         levelInstance.GetMapNode(mIdx).locatedHero = this;

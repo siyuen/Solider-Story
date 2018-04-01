@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Tiled2Unity;
+using System;
 
 public class MapNode : MonoBehaviour {
 
@@ -10,8 +11,9 @@ public class MapNode : MonoBehaviour {
     public string TileType = "<no type>";  //类型
     public string mName;                   //名字
     public int nodeValue;                  //移动值
-    public int mdef;                       //防御值
+    public int mDef;                       //防御值
     public int mAvo;                       //回避率
+    [NonSerialized]
     public int func;                       //特殊功能
     //特殊地形
     public int mLife;
@@ -40,7 +42,7 @@ public class MapNode : MonoBehaviour {
         {
             mName = instance.keyLandDic[TileType].name;
             nodeValue = DataManager.Value(instance.keyLandDic[TileType].value);
-            mdef = DataManager.Value(instance.keyLandDic[TileType].def);
+            mDef = DataManager.Value(instance.keyLandDic[TileType].def);
             mAvo = DataManager.Value(instance.keyLandDic[TileType].avo);
             func = DataManager.Value(instance.keyLandDic[TileType].func);
             //有crack的地图先隐藏第二层
@@ -56,7 +58,7 @@ public class MapNode : MonoBehaviour {
         {
             mName = NULL;
             nodeValue = 100;
-            mdef = 100;
+            mDef = 100;
             mAvo = 100;
         }
     }

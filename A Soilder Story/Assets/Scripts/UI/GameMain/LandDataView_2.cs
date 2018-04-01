@@ -34,14 +34,15 @@ public class LandDataView_2 : UIBase
 
     public override void Display()
     {
+        MessageCenter.Instance().AddListener(EventType.UPDATEMAPNODEUI, UpdateData);
         base.Display();
         mTransform.position = hidePos;
         mTransform.DOMove(showPos, 0.5f);
-        UpdateData();
     }
 
     public override void Hiding()
     {
+        MessageCenter.Instance().RemoveListener(EventType.UPDATEMAPNODEUI, UpdateData);
         mTransform.DOMove(hidePos, 0.5f);
         base.Hiding();
     }
@@ -49,9 +50,10 @@ public class LandDataView_2 : UIBase
     /// <summary>
     /// 更新mapNode数据
     /// </summary>
-    public void UpdateData()
+    public void UpdateData(MessageEvent e)
     {
-        MapNode node = MainManager.Instance().curNode;
+        UIMapNodeData data = (UIMapNodeData)e.Data;
+        MapNode node = data.node;
         if (node == null)
             return;
         if (node.TileType != "Crack")
@@ -59,10 +61,10 @@ public class LandDataView_2 : UIBase
             objValue.SetActive(true);
             objCrack.SetActive(false);
             nameText.text = node.mName;
-            if (node.mdef == LevelManager.NULLNODE)
+            if (node.mDef == LevelManager.NULLNODE)
                 defText.text = "";
             else
-                defText.text = node.mdef.ToString();
+                defText.text = node.mDef.ToString();
             if (node.mAvo == LevelManager.NULLNODE)
                 avoText.text = "";
             else

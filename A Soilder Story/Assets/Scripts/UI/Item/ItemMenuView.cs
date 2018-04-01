@@ -85,7 +85,7 @@ public class ItemMenuView : UIBase {
             name.text = weaponList[i].name;
             Text count = btn.transform.Find("Count").GetComponent<Text>();
             count.text = weaponList[i].durability;
-            if (!MainManager.Instance().curHero.WeaponMatching(weaponList[i]))
+            if (!MainManager.Instance().curHero.WeaponMatching(weaponList[i].tag))
             {
                 name.color = ItemManager.COLOR_CANNOTUSE;
                 count.color = ItemManager.COLOR_CANNOTUSE;
@@ -129,7 +129,7 @@ public class ItemMenuView : UIBase {
         weaponList = MainManager.Instance().curHero.weaponList;
         for (int i = 0; i < weaponList.Count; i++)
         {
-            if (MainManager.Instance().curHero.WeaponMatching(weaponList[i]))
+            if (MainManager.Instance().curHero.WeaponMatching(weaponList[i].tag))
             {
                 GameObject btn = ResourcesMgr.Instance().GetPool(MainProperty.ITEM_PATH);
                 btn.GetComponent<Image>().sprite = ResourcesMgr.Instance().LoadSprite(weaponList[i].sprite);
@@ -169,7 +169,7 @@ public class ItemMenuView : UIBase {
             int weaponMiss = DataManager.GetMiss(hero, weaponList[idx]);
             missText.text = weaponMiss.ToString();
             //判断是否能用
-            if (!MainManager.Instance().curHero.WeaponMatching(weaponList[idx]))
+            if (!MainManager.Instance().curHero.WeaponMatching(weaponList[idx].tag))
             {
                 attackText.color = ItemManager.COLOR_CANNOTUSE;
                 hitText.color = ItemManager.COLOR_CANNOTUSE;
@@ -262,7 +262,7 @@ public class ItemMenuView : UIBase {
     /// </summary>
     public void CancleOption()
     {
-        menuView.RegisterKeyBoardEvent();
+        menuView.RegisterEvent();
         menuView.SetCursorActive(true);
         menuView.cancleFunc = OnCancel;
         ItemManager.Instance().curWeapon = null;
@@ -282,7 +282,7 @@ public class ItemMenuView : UIBase {
     /// </summary>
     private void UseItem()
     {
-        menuView.UnRegisterKeyBoardEvent();
+        menuView.UnRegisterEvent();
         menuView.SetCursorActive(false);
         //设置当前item的信息
         //根据idx判断item/weapon

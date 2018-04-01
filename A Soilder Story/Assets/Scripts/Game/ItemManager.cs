@@ -176,16 +176,16 @@ public class ItemManager : QSingleton<ItemManager> {
         {
             if (!CanUse(curItem.name))
                 return;
-            hero.rolePro.cHp += 10;
+            hero.rolePro.SetProValue(RolePro.PRO_CHP, hero.rolePro.cHp + 10);
             if (hero.rolePro.cHp > hero.rolePro.tHp)
-                hero.rolePro.cHp = hero.rolePro.tHp;
+                hero.rolePro.SetProValue(RolePro.PRO_THP, hero.rolePro.tHp);
             UIManager.Instance().GetUI("UseItem").GetComponent<UseItemView>().UpdateUI("hp");
         }
         int dur = DataManager.Value(curItem.durability);
         dur -= 1;
         if (dur == 0)
         {
-            hero.itemList.RemoveAt(idx);
+            hero.GiveUpItem(itemList[idx].tag);
         }
         else
             curItem.durability = dur.ToString();

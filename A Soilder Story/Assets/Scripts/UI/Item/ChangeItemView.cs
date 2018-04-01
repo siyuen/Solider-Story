@@ -110,25 +110,15 @@ public class ChangeItemView : UIBase {
 
     private void RegisterEvent()
     {
-        InputManager.Instance().RegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().RegisterKeyDownEvent(OnCancleDown, EventType.KEY_X);
-        InputManager.Instance().RegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_UPARROW);
-        InputManager.Instance().RegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_DOWNARROW);
-        InputManager.Instance().RegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_LEFTARROW);
-        InputManager.Instance().RegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_RIGHTARROW);   
+        RegisterKeyBoardEvent();
     }
 
     private void UnRegisterEvent()
     {
-        InputManager.Instance().UnRegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_UPARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_DOWNARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_LEFTARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_RIGHTARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnCancleDown, EventType.KEY_X);
+        UnRegisterKeyBoardEvent();
     }
 
-    private void OnConfirmDown()
+    public override void OnConfirmDown()
     {
         if (!selectedHero)
         {
@@ -140,13 +130,13 @@ public class ChangeItemView : UIBase {
         }
     }
 
-    private void OnCancleDown()
+    public override void OnCancelDown()
     {
         UIManager.Instance().CloseUIForms("ChangeItem");
         OpenUIForm("HeroMenu");
     }
 
-    private void OnUpArrowDown()
+    public override void OnUpArrowDown()
     {
         if (!selectedHero)
         {
@@ -157,7 +147,7 @@ public class ChangeItemView : UIBase {
         }
     }
 
-    private void OnDownArrowDown()
+    public override void OnDownArrowDown()
     {
         if (!selectedHero)
         {

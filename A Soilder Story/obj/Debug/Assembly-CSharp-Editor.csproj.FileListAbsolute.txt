@@ -118,3 +118,5 @@ E:\SiYuen\Github\Solider-Story\A Soilder Story\Temp\bin\Debug\UnityEditor.iOS.Ex
 E:\SiYuen\Github\Solider-Story\A Soilder Story\obj\Debug\Assembly-CSharp-Editor.csprojResolveAssemblyReference.cache
 E:\SiYuen\Github\Solider-Story\A Soilder Story\obj\Debug\Assembly-CSharp-Editor.dll
 E:\SiYuen\Github\Solider-Story\A Soilder Story\obj\Debug\Assembly-CSharp-Editor.pdb
+E:\SiYuen\Github\Solider-Story\A Soilder Story\Temp\bin\Debug\UnityEngine.UI.pdb
+E:\SiYuen\Github\Solider-Story\A Soilder Story\Temp\bin\Debug\UnityEditor.UI.pdb

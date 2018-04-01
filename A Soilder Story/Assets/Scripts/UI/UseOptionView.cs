@@ -45,7 +45,7 @@ public class UseOptionView : UIBase
             //武器：装备/丢弃
             GameObject option = ResourcesMgr.Instance().GetPool(MainProperty.USEOPTION_PATH);
             Text text = option.GetComponent<Text>();
-            if(MainManager.Instance().curHero.WeaponMatching(ItemManager.Instance().curWeapon))
+            if (MainManager.Instance().curHero.WeaponMatching(ItemManager.Instance().curWeapon.tag))
                 text.color = ItemManager.COLOR_INSTALL;
             else
                 text.color = ItemManager.COLOR_CANNOTUSE;

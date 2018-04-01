@@ -42,6 +42,43 @@ namespace UIFramework
                 EventTriggerListener.Get(goButton).onEnter += delHandle;
             }
         }
+
+        #region 键盘事件
+        /// <summary>
+        /// 注册当前UI键盘事件
+        /// </summary>
+        protected void RegisterKeyBoardEvent()
+        {
+            InputManager.Instance().RegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
+            InputManager.Instance().RegisterKeyDownEvent(OnCancelDown, EventType.KEY_X);
+            InputManager.Instance().RegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_UPARROW);
+            InputManager.Instance().RegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_DOWNARROW);
+            InputManager.Instance().RegisterKeyDownEvent(OnLeftArrowDown, EventType.KEY_LEFTARROW);
+            InputManager.Instance().RegisterKeyDownEvent(OnRightArrowDown, EventType.KEY_RIGHTARROW);   
+        }
+
+        /// <summary>
+        /// 注销当前UI键盘事件
+        /// </summary>
+        protected void UnRegisterKeyBoardEvent()
+        {
+            InputManager.Instance().UnRegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
+            InputManager.Instance().UnRegisterKeyDownEvent(OnCancelDown, EventType.KEY_X);
+            InputManager.Instance().UnRegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_UPARROW);
+            InputManager.Instance().UnRegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_DOWNARROW);
+            InputManager.Instance().UnRegisterKeyDownEvent(OnLeftArrowDown, EventType.KEY_LEFTARROW);
+            InputManager.Instance().UnRegisterKeyDownEvent(OnRightArrowDown, EventType.KEY_RIGHTARROW);   
+        }
+
+        public virtual void OnConfirmDown() { }
+        public virtual void OnCancelDown() { }
+        public virtual void OnUpArrowDown() { }
+        public virtual void OnDownArrowDown() { }
+        public virtual void OnLeftArrowDown() { }
+        public virtual void OnRightArrowDown() { }
+        #endregion
+
+
         #region 子类常用的方法：打开/关闭UI窗体
         /// <summary>
         /// 打开UI窗体

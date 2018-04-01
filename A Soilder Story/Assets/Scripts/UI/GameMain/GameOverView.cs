@@ -27,17 +27,15 @@ public class GameOverView : UIBase {
 
     private void Init()
     {
-        InputManager.Instance().RegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().RegisterKeyDownEvent(OnConfirmDown, EventType.KEY_X);
+        RegisterKeyBoardEvent();
     }
 
     private void Clear()
     {
-        InputManager.Instance().UnRegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnConfirmDown, EventType.KEY_X);
+        UnRegisterKeyBoardEvent();
     }
 
-    private void OnConfirmDown()
+    public override void OnConfirmDown()
     {
         UIManager.Instance().CloseUIForms("GameOver");
         OpenUIForm("Login");

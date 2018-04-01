@@ -66,3 +66,4 @@ E:\SiYuen\Github\Solider-Story\A Soilder Story\Temp\bin\Debug\DOTween.xml
 E:\SiYuen\Github\Solider-Story\A Soilder Story\obj\Debug\Assembly-CSharp.csprojResolveAssemblyReference.cache
 E:\SiYuen\Github\Solider-Story\A Soilder Story\obj\Debug\Assembly-CSharp.dll
 E:\SiYuen\Github\Solider-Story\A Soilder Story\obj\Debug\Assembly-CSharp.pdb
+E:\SiYuen\Github\Solider-Story\A Soilder Story\Temp\bin\Debug\UnityEngine.UI.pdb

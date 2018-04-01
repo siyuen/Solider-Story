@@ -136,21 +136,15 @@ public class StartOptionView : UIBase
 
     private void RegisterEvent()
     {
-        InputManager.Instance().RegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_UPARROW);
-        InputManager.Instance().RegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_DOWNARROW);
-        InputManager.Instance().RegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().RegisterKeyDownEvent(OnCancelDown, EventType.KEY_X);
+        RegisterKeyBoardEvent();
     }
 
     private void UnRegisterEvent()
     {
-        InputManager.Instance().UnRegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_UPARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_DOWNARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnCancelDown, EventType.KEY_X);
+        UnRegisterKeyBoardEvent();
     }
 
-    private void OnUpArrowDown()
+    public override void OnUpArrowDown()
     {
         if (uiState == State.Normal)
         {
@@ -161,7 +155,7 @@ public class StartOptionView : UIBase
         }
     }
 
-    private void OnDownArrowDown()
+    public override void OnDownArrowDown()
     {
         if (uiState == State.Normal)
         {
@@ -172,7 +166,7 @@ public class StartOptionView : UIBase
         }
     }
 
-    private void OnConfirmDown()
+    public override void OnConfirmDown()
     {
         if (uiState == State.Normal)
         {
@@ -181,7 +175,7 @@ public class StartOptionView : UIBase
         }
     }
 
-    private void OnCancelDown()
+    public override void OnCancelDown()
     {
         if (uiState == State.Normal)
         {

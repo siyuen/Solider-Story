@@ -31,20 +31,17 @@ public class LevelStartView : UIBase
     {
         string level = LevelManager.Instance().GetCurLevel().ToString();
         levelName.text = level + " 章:   " + LevelManager.Instance().levelDic[level].name;
-        InputManager.Instance().RegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().RegisterKeyDownEvent(OnConfirmDown, EventType.KEY_X);
+        RegisterKeyBoardEvent();
 
         StartCoroutine( DelayToInvoke.DelayToInvokeDo(() => {OnConfirmDown();}, 3f));
     }
 
     private void Clear()
     {
-        InputManager.Instance().UnRegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnConfirmDown, EventType.KEY_X);
+        UnRegisterKeyBoardEvent();
     }
 
-
-    private void OnConfirmDown()
+    public override void OnConfirmDown()
     {
         UIManager.Instance().CloseUIForms("LevelStart");
         LevelManager.Instance().SetLevel();

@@ -75,10 +75,10 @@ public class FightManager : QMonoSingleton<FightManager> {
             int dmg = DataManager.GetDamge(curHero, curEnemy);
             if (random < hit)
             {
-                curEnemy.rolePro.cHp -= dmg;
+                curEnemy.rolePro.SetProValue(RolePro.PRO_CHP, curEnemy.rolePro.cHp - dmg);
                 if (curEnemy.rolePro.cHp <= 0)
                 {
-                    curEnemy.rolePro.cHp = 0;
+                    curEnemy.rolePro.SetProValue(RolePro.PRO_CHP, 0);
                     fightView.SetHp(false);
                     StartCoroutine(DelayToInvoke.DelayToInvokeDo(() => { SetExp(); }, 1f));
                     return;
@@ -98,10 +98,10 @@ public class FightManager : QMonoSingleton<FightManager> {
             int dmg = DataManager.GetDamge(curEnemy, curHero);
             if (random < hit)
             {
-                curHero.rolePro.cHp -= dmg;
+                curHero.rolePro.SetProValue(RolePro.PRO_CHP, curHero.rolePro.cHp - dmg);
                 if (curHero.rolePro.cHp <= 0)
                 {
-                    curHero.rolePro.cHp = 0;
+                    curHero.rolePro.SetProValue(RolePro.PRO_CHP, 0);
                     fightView.SetHp(true);
                     StartCoroutine(DelayToInvoke.DelayToInvokeDo(() => { SetExp(); }, 1f));
                     return;
@@ -170,7 +170,7 @@ public class FightManager : QMonoSingleton<FightManager> {
         if (show)
         {
             fightView.SetExp(curHero.rolePro.mExp, exp);
-            curHero.rolePro.mExp += exp;
+            curHero.rolePro.SetProValue(RolePro.PRO_EXP, curHero.rolePro.mExp + exp);
             if (curHero.rolePro.mExp >= 100)
             {
                 StartCoroutine(DelayToInvoke.DelayToInvokeDo(() =>

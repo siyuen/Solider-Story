@@ -4,14 +4,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using QFramework;
 using DG.Tweening;
-
+using UIFramework;
 
 /// <summary>
 /// 菜单
 /// 1.作为其他view的子对象实例，手动设定初始size跟pos
 /// 2.作为其他view的子对象动态创建，需要代码初始化
 /// </summary>
-public class MenuView : MonoBehaviour {
+public class MenuView : UIBase {
 
     public delegate void NormalFunc();
     //换算
@@ -119,7 +119,7 @@ public class MenuView : MonoBehaviour {
             menuRectTransform.Add("Cursor", new MenuFrame(optionCursor.rectTransform.sizeDelta, pos));
         optionCursor.rectTransform.localPosition = pos;
         //注册
-        RegisterKeyBoardEvent();
+        RegisterEvent();
         //更新一哈
         UpdateOption();
     }
@@ -130,7 +130,7 @@ public class MenuView : MonoBehaviour {
     public void Hide()
     {
         Clear();
-        UnRegisterKeyBoardEvent();
+        UnRegisterEvent();
     }
 
     /// <summary>
@@ -175,23 +175,17 @@ public class MenuView : MonoBehaviour {
     }
 
     #region 注册基本事件
-    public void RegisterKeyBoardEvent()
+    public void RegisterEvent()
     {
-        InputManager.Instance().RegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_UPARROW);
-        InputManager.Instance().RegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_DOWNARROW);
-        InputManager.Instance().RegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().RegisterKeyDownEvent(OnCancelDown, EventType.KEY_X);
+        RegisterKeyBoardEvent();
     }
 
-    public void UnRegisterKeyBoardEvent()
+    public void UnRegisterEvent()
     {
-        InputManager.Instance().UnRegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_UPARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_DOWNARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnCancelDown, EventType.KEY_X);
+        UnRegisterKeyBoardEvent();
     }
 
-    private void OnUpArrowDown()
+    public override void OnUpArrowDown()
     {
         cursorIdx -= 1;
         if (cursorIdx < 0)
@@ -199,7 +193,7 @@ public class MenuView : MonoBehaviour {
         UpdateOption();
     }
 
-    private void OnDownArrowDown()
+    public override void OnDownArrowDown()
     {
         cursorIdx += 1;
         if (cursorIdx >= childFuncList.Count)
@@ -207,12 +201,12 @@ public class MenuView : MonoBehaviour {
         UpdateOption();
     }
 
-    private void OnConfirmDown()
+    public override void OnConfirmDown()
     {
         childFuncList[cursorIdx]();
     }
 
-    private void OnCancelDown()
+    public override void OnCancelDown()
     {
         cancleFunc();
     }

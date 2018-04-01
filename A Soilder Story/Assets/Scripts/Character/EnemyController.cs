@@ -14,27 +14,33 @@ public class EnemyController : Character
         stop,
         dead
     }
-    //private EnemyState enemyState;
+    public EnemyState enemyState;
     private List<int> attackHeroList = new List<int>();
-    //private List<int> heroList = new List<int>();  //在攻击范围内的hero
     private int targetIdx;
     //cursor
     public GameObject attackCursor;
-	// Use this for initialization
+
+    private UpdateCurEnemy curEnemy = new UpdateCurEnemy();
+
 	void Start () {
-        dirStr = "bNormal";
         fightRole = ResourcesMgr.Instance().GetPool(rolePro.fightPrefab);
         fightRole.transform.SetParent(EnemyManager.Instance().enemyContent.transform);
         fightRole.SetActive(false);
-        isHero = false;
+        curEnemy.enemy = this;
 	}
 
     public override void Init()
     {
         base.Init();
-        //enemyState = EnemyState.normal;
+        enemyState = EnemyState.normal;
         mIdx = levelInstance.Pos2Idx(this.transform.position);
         levelInstance.GetMapNode(mIdx).locatedEnemy = this;
+    }
+
+    public override void InitData(PublicRoleData data)
+    {
+        base.InitData(data);
+        isHero = false;
     }
 
     public void Clear()
@@ -43,24 +49,16 @@ public class EnemyController : Character
         ResourcesMgr.Instance().PushPool(fightRole, rolePro.fightPrefab);
     }
 
-	// Update is called once per frame
-	void Update () {
-        if (bMove)
-            Move();
-	}
-
-    public override void MoveTo(int to)
+    public void MoveTo(int to)
     {
         levelInstance.GetMapNode(mIdx).locatedEnemy = null;
-        mainInstance.curMouseEnemy = null;
-        base.MoveTo(to);
+        roleMove.MoveTo(to);
     }
 
-    public override void MoveTo(MapNode to)
+    public void MoveTo(MapNode to)
     {
         levelInstance.GetMapNode(mIdx).locatedEnemy = null;
-        mainInstance.curMouseEnemy = null;
-        base.MoveTo(to);
+        roleMove.MoveTo(to);
     }
 
     //搜索附近hero
@@ -158,12 +156,11 @@ public class EnemyController : Character
     /// </summary>
     public void Selected()
     {
-        if (!bSelected)
-        {
-            bSelected = true;
-            MoveManager.Instance().ShowMoveRange(this.transform.position, rolePro.mMove, 1);
-            mainInstance.HideAllUI();
-        }
+        if (enemyState != EnemyState.normal)
+            return;
+        enemyState = EnemyState.selcted;
+        MessageCenter.Instance().DispatchEvent(new MessageEvent(EventType.UPDATECURENEMY, curEnemy));
+        MoveManager.Instance().ShowMoveRange(this.transform.position, rolePro.mMove, 1);
     }
 
     /// <summary>
@@ -171,14 +168,13 @@ public class EnemyController : Character
     /// </summary>
     public void CancelSelected()
     {
-        bSelected = false;
+        enemyState = EnemyState.normal;
         HideMoveRange();
         mainInstance.ShowAllUI();
     }
 
     public override void MoveDone()
     {
-        base.MoveDone();
         levelInstance.GetMapNode(mIdx).locatedEnemy = this;
         Attack();
         MoveManager.Instance().ReSet();
@@ -195,6 +191,7 @@ public class EnemyController : Character
     {
         base.Standby();
         mainInstance.curEnemy = null;
+        enemyState = EnemyState.stop;
         if (EnemyManager.Instance().SetStandby())
             UIManager.Instance().ShowUIForms("Round");
         else

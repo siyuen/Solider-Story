@@ -55,13 +55,13 @@ public class HeroMenu : UIBase
                 AddOption("交换");
             else
             {
-                if(hero.bagList.Count > 0)
+                if (hero.bagList.Count > 0)
                     AddOption("交换");
             }
         }
         //交换过的更新一下当前武器列表
         if (hero.bChangeItem)
-             hero.CurWeaponUpdate();
+            hero.CurWeaponUpdate();
         AddInMenu();
 
         menuView.cancleFunc = OnCancle;
@@ -88,8 +88,8 @@ public class HeroMenu : UIBase
         {
             for (int j = i + 1; j < optionList.Count; j++)
             {
-                int value = DataManager.Value(HeroManager.Instance().keyOptionDic[optionList[i].name].value);
-                int value1 = DataManager.Value(HeroManager.Instance().keyOptionDic[optionList[j].name].value);
+                int value = DataManager.Value(HeroOption.Instance().keyOptionDic[optionList[i].name].value);
+                int value1 = DataManager.Value(HeroOption.Instance().keyOptionDic[optionList[j].name].value);
                 if (value > value1)
                 {
                     GameObject btn = optionList[j];
@@ -102,9 +102,9 @@ public class HeroMenu : UIBase
         {
             string name = optionList[i].name;
             if (name == "攻击")
-                menuView.AddItem(MainProperty.BUTTON_PATH, optionList[i], HeroManager.Instance().funcDic[name], HeroManager.Instance().MoveToAttack);
+                menuView.AddItem(MainProperty.BUTTON_PATH, optionList[i], HeroOption.Instance().funcDic[name], HeroOption.Instance().MoveToAttack);
             else
-                menuView.AddItem(MainProperty.BUTTON_PATH, optionList[i], HeroManager.Instance().funcDic[name], HeroManager.Instance().MoveToAnother);
+                menuView.AddItem(MainProperty.BUTTON_PATH, optionList[i], HeroOption.Instance().funcDic[name], HeroOption.Instance().MoveToAnother);
         }
     }
 

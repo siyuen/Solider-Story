@@ -49,7 +49,7 @@ public class CareerManager : QSingleton<CareerManager> {
         CareerData career = keyCareerDic[key];
         int random = Random.Range(0, HUNDRED);
         //hp
-        if (point == "hp")
+        if (point == RolePro.PRO_THP)
         {
             if (random < DataManager.Value(career.hp))
                 return true;
@@ -57,7 +57,7 @@ public class CareerManager : QSingleton<CareerManager> {
                 return false;
         }
         //power
-        if (point == "power")
+        if (point == RolePro.PRO_POWER)
         {
             if (random < DataManager.Value(career.power))
                 return true;
@@ -65,7 +65,7 @@ public class CareerManager : QSingleton<CareerManager> {
                 return false;
         }
         //skill
-        if (point == "skill")
+        if (point == RolePro.PRO_SKILL)
         {
             if (random < DataManager.Value(career.skill))
                 return true;
@@ -73,7 +73,7 @@ public class CareerManager : QSingleton<CareerManager> {
                 return false;
         }
         //speed
-        if (point == "speed")
+        if (point == RolePro.PRO_SPEED)
         {
             if (random < DataManager.Value(career.speed))
                 return true;
@@ -81,7 +81,7 @@ public class CareerManager : QSingleton<CareerManager> {
                 return false;
         }
         //lucky
-        if (point == "lucky")
+        if (point == RolePro.PRO_LUCKY)
         {
             if (random < DataManager.Value(career.lucky))
                 return true;
@@ -89,7 +89,7 @@ public class CareerManager : QSingleton<CareerManager> {
                 return false;
         }
         //pdefense
-        if (point == "pdefense")
+        if (point == RolePro.PRO_PDEFENSE)
         {
             if (random < DataManager.Value(career.pdefense))
                 return true;
@@ -97,7 +97,7 @@ public class CareerManager : QSingleton<CareerManager> {
                 return false;
         }
         //mdefense
-        if (point == "mdefense")
+        if (point == RolePro.PRO_MDEFENSE)
         {
             if (random < DataManager.Value(career.mdefense))
                 return true;

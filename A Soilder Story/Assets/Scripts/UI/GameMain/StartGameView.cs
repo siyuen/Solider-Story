@@ -141,25 +141,15 @@ public class StartGameView : UIBase {
 
     private void RegisterEvent()
     {
-        InputManager.Instance().RegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_UPARROW);
-        InputManager.Instance().RegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_DOWNARROW);
-        InputManager.Instance().RegisterKeyDownEvent(OnLeftArrowDown, EventType.KEY_LEFTARROW);
-        InputManager.Instance().RegisterKeyDownEvent(OnRightArrowDown, EventType.KEY_RIGHTARROW);
-        InputManager.Instance().RegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().RegisterKeyDownEvent(OnCancelDown, EventType.KEY_X);
+        RegisterKeyBoardEvent();
     }
 
     private void UnRegisterEvent()
     {
-        InputManager.Instance().UnRegisterKeyDownEvent(OnUpArrowDown, EventType.KEY_UPARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnDownArrowDown, EventType.KEY_DOWNARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnLeftArrowDown, EventType.KEY_LEFTARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnRightArrowDown, EventType.KEY_RIGHTARROW);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnConfirmDown, EventType.KEY_Z);
-        InputManager.Instance().UnRegisterKeyDownEvent(OnCancelDown, EventType.KEY_X);
+        UnRegisterKeyBoardEvent();
     }
 
-    private void OnUpArrowDown()
+    public override void OnUpArrowDown()
     {
         if (uiState == State.Normal)
         {
@@ -170,7 +160,7 @@ public class StartGameView : UIBase {
         }
     }
 
-    private void OnDownArrowDown()
+    public override void OnDownArrowDown()
     {
         if (uiState == State.Normal)
         {
@@ -181,7 +171,7 @@ public class StartGameView : UIBase {
         }
     }
 
-    private void OnLeftArrowDown()
+    public override void OnLeftArrowDown()
     {
         if (uiState == State.Option)
         {
@@ -192,7 +182,7 @@ public class StartGameView : UIBase {
         }
     }
 
-    private void OnRightArrowDown()
+    public override void OnRightArrowDown()
     {
         if (uiState == State.Option)
         {
@@ -203,7 +193,7 @@ public class StartGameView : UIBase {
         }
     }
 
-    private void OnConfirmDown()
+    public override void OnConfirmDown()
     {
         GameManager game = GameManager.Instance();
         if (uiState == State.Normal)
@@ -324,7 +314,7 @@ public class StartGameView : UIBase {
     }
 
 
-    private void OnCancelDown()
+    public override void OnCancelDown()
     {
         if (uiState == State.Normal)
         {
@@ -338,6 +328,7 @@ public class StartGameView : UIBase {
             optionObj.SetActive(false);
             tipsObj.SetActive(false);
             uiState = State.Normal;
+            optionIdx = 0;
         }
         else if (uiState == State.Tips)
         {
