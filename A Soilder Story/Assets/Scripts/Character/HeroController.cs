@@ -110,7 +110,6 @@ public class HeroController : Character
         SetAnimator("bNormal", false);
         SetAnimator("bMouse", false);
         MoveManager.Instance().ShowMoveRange(this.transform.position, rolePro.mMove, 1);
-       
     }
 
     public override void LevelUp(int add = 1)

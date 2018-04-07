@@ -152,14 +152,17 @@ public class ItemManager : QSingleton<ItemManager> {
     public bool CanUse(string key)
     {
         HeroController hero = MainManager.Instance().curHero;
-        if (key == "伤药")
+        switch (key)
         {
-            if (hero.rolePro.tHp == hero.rolePro.cHp)
+            case "伤药":
+                {
+                    if (hero.rolePro.tHp != hero.rolePro.cHp)
+                        return true;
+                }
                 return false;
-            else
-                return true;
+            default:
+                return false;
         }
-        return false;
     }
 
     /// <summary>
@@ -172,14 +175,20 @@ public class ItemManager : QSingleton<ItemManager> {
             return;
         UIManager.Instance().ShowUIForms("UseItem");
         HeroController hero = MainManager.Instance().curHero;
-        if (curItem.name == "伤药")
+        switch (curItem.name)
         {
-            if (!CanUse(curItem.name))
+            case "伤药":
+                {
+                    if (!CanUse(curItem.name))
+                        return;
+                    hero.rolePro.SetProValue(RolePro.PRO_CHP, hero.rolePro.cHp + 10);
+                    if (hero.rolePro.cHp > hero.rolePro.tHp)
+                        hero.rolePro.SetProValue(RolePro.PRO_THP, hero.rolePro.tHp);
+                    UIManager.Instance().GetUI("UseItem").GetComponent<UseItemView>().UpdateUI("hp");
+                }
+                break;
+            default:
                 return;
-            hero.rolePro.SetProValue(RolePro.PRO_CHP, hero.rolePro.cHp + 10);
-            if (hero.rolePro.cHp > hero.rolePro.tHp)
-                hero.rolePro.SetProValue(RolePro.PRO_THP, hero.rolePro.tHp);
-            UIManager.Instance().GetUI("UseItem").GetComponent<UseItemView>().UpdateUI("hp");
         }
         int dur = DataManager.Value(curItem.durability);
         dur -= 1;

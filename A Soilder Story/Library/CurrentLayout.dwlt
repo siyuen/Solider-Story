@@ -279,8 +279,8 @@ MonoBehaviour:
     y: 0
     width: 556
     height: 410
-  m_MinSize: {x: 204, y: 221}
-  m_MaxSize: {x: 4004, y: 4021}
+  m_MinSize: {x: 200, y: 200}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 22}
   m_Panes:
   - {fileID: 22}
@@ -693,7 +693,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: e6fbffff00000000
+    m_ExpandedIDs: 3cf5ffff3ef6ffff66f8ffffe6fbffff00000000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -743,7 +743,7 @@ MonoBehaviour:
     width: 552
     height: 516
   m_SearchFilter:
-    m_NameFilter: res
+    m_NameFilter: tiled
     m_ClassNames: []
     m_AssetLabels: []
     m_AssetBundleNames: []
@@ -753,11 +753,11 @@ MonoBehaviour:
     m_ShowAllHits: 0
     m_SearchArea: 0
     m_Folders:
-    - Assets/Scripts/Character
+    - Assets/Scripts/Helps
   m_ViewMode: 1
   m_StartGridSize: 60
   m_LastFolders:
-  - Assets/Scripts/Character
+  - Assets/Scripts/Helps
   m_LastFoldersGridSize: 60
   m_LastProjectPath: E:\SiYuen\Github\Solider-Story\A Soilder Story
   m_IsLocked: 0
@@ -765,7 +765,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 129}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000a4250000bc270000ec270000f82700000c2800005e2900001a2a0000622b0000762b0000f02b0000f62b00001e2c0000d42c0000482d00005830000000ca9a3bffffff7f
+    m_ExpandedIDs: 00000000a2250000ba270000ea270000f62700000a2800005c290000182a0000602b0000742b0000ee2b0000f42b00001c2c0000d22c0000462d00005630000000ca9a3bffffff7f
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -793,7 +793,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000a4250000bc270000ec270000f82700000c2800005e2900001a2a0000622b0000762b0000f02b0000f62b00001e2c0000d42c0000482d000058300000
+    m_ExpandedIDs: 00000000a2250000ba270000ea270000f62700000a2800005c290000182a0000602b0000742b0000ee2b0000f42b00001c2c0000d22c0000462d000056300000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 

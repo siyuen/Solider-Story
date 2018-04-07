@@ -180,68 +180,22 @@ public class MoveManager : QSingleton<MoveManager> {
             int mapXNode = levelInstance.mapXNode;
             int nowRow = w / mapXNode;
 
-            if (levelInstance.IsInMap(w + 1) && !mapNodeList[w + 1].bVisited && (w + 1) / mapXNode == nowRow)  //如果右边节点存在且未被访问
-            {
-                if (mapNodeList[w].moveValue + mapNodeList[w + 1].nodeValue <= moveRange)  //未超出移动能力
-                {
-                    int idx = w + 1;
-                    //判断crack
-                    if (mapNodeList[idx].TileType == "Crack")
-                    {
-                        if (mapNodeList[idx].mLife != 0)
-                            endNodeList.Add(w);
-                        else
-                            AddNodeInList(w, idx, enemy);
-                    }
-                    else
-                        AddNodeInList(w, idx, enemy); 
-                }
-                else
-                    endNodeList.Add(w);
-            }
-            if (levelInstance.IsInMap(w + mapXNode) && !mapNodeList[w + mapXNode].bVisited)
-            {
-                if (mapNodeList[w].moveValue + mapNodeList[w + mapXNode].nodeValue <= moveRange)
-                {
-                    int idx = w + mapXNode;
-                    //判断crack
-                    if (mapNodeList[idx].TileType == "Crack")
-                    {
-                        if (mapNodeList[idx].mLife != 0)
-                            endNodeList.Add(w);
-                        else
-                            AddNodeInList(w, idx, enemy);
-                    }
-                    else
-                        AddNodeInList(w, idx, enemy); 
-                }
-                else
-                    endNodeList.Add(w);
-            }
+            //简单判断是否将上下左右四个节点放入list
+            List<int> roundnode = new List<int>();
+            if (levelInstance.IsInMap(w + 1) && !mapNodeList[w + 1].bVisited && (w + 1) / mapXNode == nowRow)
+                roundnode.Add(w + 1);
             if (levelInstance.IsInMap(w - 1) && !mapNodeList[w - 1].bVisited && (w - 1) / mapXNode == nowRow)
-            {
-                if (mapNodeList[w].moveValue + mapNodeList[w - 1].nodeValue <= moveRange)
-                {
-                    int idx = w - 1;
-                    //判断crack
-                    if (mapNodeList[idx].TileType == "Crack")
-                    {
-                        if (mapNodeList[idx].mLife != 0)
-                            endNodeList.Add(w);
-                        else
-                            AddNodeInList(w, idx, enemy);
-                    }
-                    else
-                        AddNodeInList(w, idx, enemy); 
-                }
-                else
-                    endNodeList.Add(w);
-            }
+                roundnode.Add(w - 1);
+            if (levelInstance.IsInMap(w + mapXNode) && !mapNodeList[w + mapXNode].bVisited)
+                roundnode.Add(w + mapXNode);
             if (levelInstance.IsInMap(w - mapXNode) && !mapNodeList[w - mapXNode].bVisited)
+                roundnode.Add(w - mapXNode);
+
+            for (int i = 0; i < roundnode.Count; i++)
             {
-                if (mapNodeList[w].moveValue + mapNodeList[w - mapXNode].nodeValue <= moveRange)
+                int idx = roundnode[i];
+                if (mapNodeList[w].moveValue + mapNodeList[idx].nodeValue <= moveRange)  //未超出移动能力
                 {
-                    int idx = w - mapXNode;
                     //判断crack
                     if (mapNodeList[idx].TileType == "Crack")
                     {
@@ -251,11 +205,12 @@ public class MoveManager : QSingleton<MoveManager> {
                             AddNodeInList(w, idx, enemy);
                     }
                     else
-                        AddNodeInList(w, idx, enemy); 
+                        AddNodeInList(w, idx, enemy);
                 }
                 else
                     endNodeList.Add(w);
             }
+            roundnode = null;
             rangeNodeList.Add(w);
             mapNodeList[w].canMove = true;
         }
